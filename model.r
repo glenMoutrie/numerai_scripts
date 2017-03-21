@@ -26,7 +26,7 @@ createFunction <- function(field.names) {
 }
 
 # This is your model that will learn to predict. Your model is trained on the numerai_training_data
-model <- logit.spike(createFunction(names(train[-1])), data=train, niter = 500)
+model <- logit.spike(createFunction(names(train)[-which(names(train) == "target")]), data=train, niter = 500)
 
 print("Predicting...")
 # Your trained model is now used to make predictions on the numerai_tournament_data
