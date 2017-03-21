@@ -1,0 +1,2 @@
+# Numer.ai scripts
+This is a small repo to store the scripts for Numer.ai competitions. I don't intend to build this out too heavily, but makes working at different locations easier if I have them stored on a git.
