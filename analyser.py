@@ -6,17 +6,30 @@ import numpy as np
 from sklearn import metrics, preprocessing, linear_model, svm, metrics, ensemble, naive_bayes
 from sklearn.model_selection import ShuffleSplit
 
+class DataLoader():
 
+    training_data_file = 'numerai_training_data.csv'
+    test_data_file = 'numerai_tournament_data.csv'
 
-def main():
+    def __init__(self, loc, date) :
+        self.loc = loc + "numerai_datasets_" + date + "/"
+        self.date = date
+
+    def read(self):
+        train = pd.read_csv(self.loc + self.training_data_file, header = 0)
+        test = pd.read_csv(self.loc + self.test_data_file, header = 0)
+        return train, test
+
+def predictData(competitionType):
 
     print("Loading data...")
+
     # Load the data from the CSV files
-    training_data = pd.read_csv('~/Downloads/numerai_datasets/numerai_training_data.csv', header=0)
-    prediction_data = pd.read_csv('~/Downloads/numerai_datasets/numerai_tournament_data.csv', header=0)
+    dl = DataLoader("datasets/", "17_07_2018")
+    training_data, prediction_data = dl.read()
 
     features = [f for f in list(training_data) if "feature" in f]
-    Y = training_data['target']
+    Y = training_data['target_' + competitionType]
     X = training_data[features]
 
 #     for i in {'id', 'era', 'data_type', 'target'}:
@@ -37,7 +50,7 @@ def main():
         Y_test = Y[train_index]
         X_test = X.iloc[train_index]
 
-        for name, model in models.iteritems():#svm.SVC(probability= True)
+        for name, model in models.items():#svm.SVC(probability= True)
 
             print("Training " + name + "...")
             # Your model is trained on the numerai_training_data
@@ -50,7 +63,7 @@ def main():
             y_prediction = model.predict_proba(X.iloc[test_index])
             results = y_prediction[:, 1]
 
-            if not model_performance.has_key(name):
+            if not name in model_performance:
                 model_performance[name] = []
 
             model_performance[name].append(metrics.log_loss(Y[test_index], results))
@@ -84,4 +97,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    predictData('bernie')
