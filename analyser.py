@@ -6,6 +6,13 @@ import numpy as np
 from sklearn import metrics, preprocessing, linear_model, svm, metrics, ensemble, naive_bayes
 from sklearn.model_selection import ShuffleSplit
 
+
+# Plan:
+# 1) create a data loader that creates a NumeraiData class
+# 2) Define a NumeraiData Class with features, x data and y data
+# 3) finish the model tester that returns the model results, estimating in parallel using multiprocessing
+
+
 class DataLoader():
 
     training_data_file = 'numerai_training_data.csv'
@@ -19,6 +26,30 @@ class DataLoader():
         train = pd.read_csv(self.loc + self.training_data_file, header = 0)
         test = pd.read_csv(self.loc + self.test_data_file, header = 0)
         return train, test
+
+    def write(self, output):
+        output.to_csv(self.loc + "predictions.csv", index = False)
+
+
+class modelTester():
+
+    models = {'logistic' : linear_model.LogisticRegression(n_jobs=1),
+                  'naiveBayes' : naive_bayes.GaussianNB(),
+                  'randomForest' : ensemble.RandomForestClassifier(),
+                  'extraTrees' : ensemble.ExtraTreesClassifier(),
+                  # 'gradientBoosting' : ensemble.GradientBoostingClassifier(),
+                  'adaBoost' : ensemble.AdaBoostClassifier()}
+
+    def __init__(self, data, splits = 5, test_size = 0.25) :
+        self.splits = splits
+        self.ss = ShuffleSplit(n_splits = splits, test_size = test_size)
+
+    def __testSplit(train_index, test_index):
+        pass
+
+
+
+
 
 def predictData(competitionType):
 
@@ -39,12 +70,13 @@ def predictData(competitionType):
                   'naiveBayes' : naive_bayes.GaussianNB(),
                   'randomForest' : ensemble.RandomForestClassifier(),
                   'extraTrees' : ensemble.ExtraTreesClassifier(),
-                  'gradientBoosting' : ensemble.GradientBoostingClassifier(max_depth= 20),
+                  # 'gradientBoosting' : ensemble.GradientBoostingClassifier(),
                   'adaBoost' : ensemble.AdaBoostClassifier()}
 
     model_performance = {}
 
-    splits = 5
+    # splits = 5
+    splits = 1
     ss = ShuffleSplit(n_splits=splits, test_size=0.25)
     for train_index, test_index in ss.split(training_data):
         Y_test = Y[train_index]
@@ -71,14 +103,12 @@ def predictData(competitionType):
 
             print(np.mean(np.array(model_performance[name])))
             print("Writing predictions to predictions.csv")
-
-
             # Save the predictions out to a CSV file
 
     best_model = ""
     best_acc = 0
 
-    for mod_name, acc in model_performance.iteritems():
+    for mod_name, acc in model_performance.items():
         mean = np.mean(np.array(acc))
         if mean > best_acc:
             best_acc = mean
@@ -91,7 +121,7 @@ def predictData(competitionType):
 
     results_df = pd.DataFrame(data={'probability': results})
     joined = pd.DataFrame(prediction_data["id"]).join(results_df)
-    joined.to_csv("~/predictions.csv", index=False)
+    dl.write(joined)
     # Now you can upload these predictions on numer.ai
 
 
