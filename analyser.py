@@ -11,6 +11,59 @@ from sklearn.model_selection import ShuffleSplit
 # 1) create a data loader that creates a NumeraiData class
 # 2) Define a NumeraiData Class with features, x data and y data
 # 3) finish the model tester that returns the model results, estimating in parallel using multiprocessing
+# 4) automate with numerapi and other such tools
+
+
+class DataSet():
+
+    y_full = np.ndarray(None)
+    x_full = np.ndarray(None)
+
+    y_test_split = np.ndarray(None)
+    y_train_split = np.ndarray(None)
+
+    x_test_split = np.ndarray(None)
+    x_train_split = np.ndarray(None)
+
+    
+
+    def __init__(self, X, Y):
+
+        self.y_full = self.y_test_split = Y
+        self.x_full = self.x_test_split = X
+
+        self.N = Y.shape[0]
+        self.split_index = {'train' : 0:(self.N-1), 'test' : 0}
+
+    def updateSplit(self, train_ind, test_ind):
+
+        self.y_train_split = Y[train_index]
+        self.x_train_split = X.iloc[train_index]
+
+        self.x_test_split = X.iloc[test_index]
+        self.y_test_split = Y[train_index]
+
+        self.split_index = {'train' : train_index, 'test' : test_index}
+
+    def getTrainingData(self):
+        return self.y_train_split, self.x_train_split
+
+    def getTestData(self):
+        return self.y_test_split, self.x_test_split
+
+    def getY(self, train):
+        if train:
+            return self.y_train_split
+        else:
+            return self.y_test_split
+
+    def getX(self, train):
+        if train:
+            return self.x_train_split
+        else:
+            return self.x_test_split
+
+
 
 
 class DataLoader():
@@ -18,17 +71,28 @@ class DataLoader():
     training_data_file = 'numerai_training_data.csv'
     test_data_file = 'numerai_tournament_data.csv'
 
+
+
     def __init__(self, loc, date) :
         self.loc = loc + "numerai_datasets_" + date + "/"
         self.date = date
 
     def read(self):
-        train = pd.read_csv(self.loc + self.training_data_file, header = 0)
-        test = pd.read_csv(self.loc + self.test_data_file, header = 0)
-        return train, test
+        self.train = pd.read_csv(self.loc + self.training_data_file, header = 0)
+        self.test = pd.read_csv(self.loc + self.test_data_file, header = 0)
+
+        self.features = [f for f in list(train) if "feature" in f]
+
+        self.train = DataSet(train['target_' + competitionType], train[features])
+        self.test = test[features]
 
     def write(self, output):
         output.to_csv(self.loc + "predictions.csv", index = False)
+
+    def getData(self, competition_type):
+        data = DataSet()
+
+
 
 
 class modelTester():
@@ -43,9 +107,20 @@ class modelTester():
     def __init__(self, data, splits = 5, test_size = 0.25) :
         self.splits = splits
         self.ss = ShuffleSplit(n_splits = splits, test_size = test_size)
+        self.model_performance = {}
 
-    def __testSplit(train_index, test_index):
-        pass
+    def __testModel(self, X_pred, X_test, Y_test, name, model):
+        model.fit(X_test, Y_test)
+
+        # y_prediction = model.predict_proba(X.iloc[test_index])
+        y_prediction = model.predict_proba(X.iloc[test_index])
+
+        results = y_prediction[:, 1]
+
+        if not name in model_performance:
+            model_performance[name] = []
+
+        self.model_performance[name].append(metrics.log_loss(Y[test_index], results))
 
 
 
