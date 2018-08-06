@@ -13,6 +13,7 @@ from sklearn.model_selection import ShuffleSplit
 # 3) finish the model tester that returns the model results, estimating in parallel using multiprocessing
 # 4) automate with numerapi and other such tools
 
+# CURRENT TODO: FIX BUGS IN UPDATE
 
 class DataSet():
 
@@ -33,7 +34,7 @@ class DataSet():
         self.x_full = self.x_test_split = X
 
         self.N = Y.shape[0]
-        self.split_index = {'train' : 0:(self.N-1), 'test' : 0}
+        self.split_index = {'train' : [i for i in range(0,self.N)], 'test' : []}
 
     def updateSplit(self, train_ind, test_ind):
 
@@ -63,6 +64,9 @@ class DataSet():
         else:
             return self.x_test_split
 
+    def getXFull(self):
+        return self.x_full
+
 
 
 
@@ -81,16 +85,16 @@ class DataLoader():
         self.train = pd.read_csv(self.loc + self.training_data_file, header = 0)
         self.test = pd.read_csv(self.loc + self.test_data_file, header = 0)
 
-        self.features = [f for f in list(train) if "feature" in f]
-
-        self.train = DataSet(train['target_' + competitionType], train[features])
-        self.test = test[features]
+        self.features = [f for f in list(self.train) if "feature" in f]
 
     def write(self, output):
         output.to_csv(self.loc + "predictions.csv", index = False)
 
     def getData(self, competition_type):
-        data = DataSet()
+        self.train = DataSet(self.train[self.features], self.train['target_' + competition_type])
+        self.test = self.test[self.features]
+
+        return self.train, self.test
 
 
 
@@ -104,23 +108,32 @@ class modelTester():
                   # 'gradientBoosting' : ensemble.GradientBoostingClassifier(),
                   'adaBoost' : ensemble.AdaBoostClassifier()}
 
-    def __init__(self, data, splits = 5, test_size = 0.25) :
+    def __init__(self, splits = 5, test_size = 0.25) :
         self.splits = splits
         self.ss = ShuffleSplit(n_splits = splits, test_size = test_size)
         self.model_performance = {}
 
-    def __testModel(self, X_pred, X_test, Y_test, name, model):
-        model.fit(X_test, Y_test)
 
-        # y_prediction = model.predict_proba(X.iloc[test_index])
-        y_prediction = model.predict_proba(X.iloc[test_index])
+    def testAllSplits(self, data):
+        for train_i, test_i in self.ss.split(data.getXFull()):
+            data.updateSplit(train_i, test_i)
+            __testAllModels(data)
+
+
+
+    def testAllModels(data, models):
+        print({model: testModel(data, models.get(model)) for model in models.keys()})
+
+
+    def __testModel(X_train, X_test, Y_train, Y_test, model):
+
+        model.fit(data.getX(True), data.getY(True))
+
+        y_prediction = model.predict_proba(data.getX(False))
 
         results = y_prediction[:, 1]
 
-        if not name in model_performance:
-            model_performance[name] = []
-
-        self.model_performance[name].append(metrics.log_loss(Y[test_index], results))
+        return metrics.log_loss(data.getY(False), results)
 
 
 
@@ -202,4 +215,15 @@ def predictData(competitionType):
 
 
 if __name__ == '__main__':
-    predictData('bernie')
+
+    dl = DataLoader("datasets/", "17_07_2018")
+    dl.read()
+    
+    train, test = dl.getData('bernie')
+    
+    tester = modelTester(1, 0.25)
+
+    tester.testAllSplits(train)
+
+
+    # predictData('bernie')
