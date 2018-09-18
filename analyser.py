@@ -38,13 +38,13 @@ class DataSet():
 
     def updateSplit(self, train_ind, test_ind):
 
-        self.y_train_split = Y[train_index]
-        self.x_train_split = X.iloc[train_index]
+        self.y_train_split = self.y_full[train_ind]
+        self.x_train_split = self.x_full.iloc[train_ind]
 
-        self.x_test_split = X.iloc[test_index]
-        self.y_test_split = Y[train_index]
+        self.x_test_split = self.x_full.iloc[test_ind]
+        self.y_test_split = self.y_full[test_ind]
 
-        self.split_index = {'train' : train_index, 'test' : test_index}
+        self.split_index = {'train' : train_ind, 'test' : test_ind}
 
     def getTrainingData(self):
         return self.y_train_split, self.x_train_split
@@ -66,6 +66,9 @@ class DataSet():
 
     def getXFull(self):
         return self.x_full
+
+    def getYFull(self):
+        return self.y_full
 
 
 
@@ -92,40 +95,51 @@ class DataLoader():
 
     def getData(self, competition_type):
         self.train = DataSet(self.train[self.features], self.train['target_' + competition_type])
-        self.test = self.test[self.features]
+        self.test = self.test
 
         return self.train, self.test
 
 
 
 
-class modelTester():
+class ModelTester():
 
     models = {'logistic' : linear_model.LogisticRegression(n_jobs=1),
-                  'naiveBayes' : naive_bayes.GaussianNB(),
-                  'randomForest' : ensemble.RandomForestClassifier(),
-                  'extraTrees' : ensemble.ExtraTreesClassifier(),
+                  'naiveBayes' : naive_bayes.GaussianNB()}
+                  # 'randomForest' : ensemble.RandomForestClassifier(),
+                  # 'extraTrees' : ensemble.ExtraTreesClassifier(),
                   # 'gradientBoosting' : ensemble.GradientBoostingClassifier(),
-                  'adaBoost' : ensemble.AdaBoostClassifier()}
+                  # 'adaBoost' : ensemble.AdaBoostClassifier()}
 
     def __init__(self, splits = 5, test_size = 0.25) :
         self.splits = splits
+        self.splits_performed = 0
         self.ss = ShuffleSplit(n_splits = splits, test_size = test_size)
-        self.model_performance = {}
+        self.model_performance = pd.DataFrame(columns = list(self.models.keys()))
+        self.best_model = None
 
 
     def testAllSplits(self, data):
+
         for train_i, test_i in self.ss.split(data.getXFull()):
+
             data.updateSplit(train_i, test_i)
-            __testAllModels(data)
+            self.splits_performed += 1
+
+            self.testAllModels(data,  self.models)
+
+            print("Splits tested: " + str(self.splits_performed))
+            print("Test acc: " + str(self.model_performance) + "\n")
 
 
 
-    def testAllModels(data, models):
-        print({model: testModel(data, models.get(model)) for model in models.keys()})
+    def testAllModels(self, data, models):
 
+        mp_update = {model: self.testModel(data, models.get(model)) for model in models.keys()}
 
-    def __testModel(X_train, X_test, Y_train, Y_test, model):
+        self.model_performance = self.model_performance.append(mp_update, ignore_index = True)
+
+    def testModel(self, data, model):
 
         model.fit(data.getX(True), data.getY(True))
 
@@ -135,82 +149,26 @@ class modelTester():
 
         return metrics.log_loss(data.getY(False), results)
 
+    def getBestModel(self):
+
+        print(self.model_performance)
+        self.best_model = self.models[self.model_performance.apply(np.mean).idxmin()]
+
+        print("Best model: " + self.model_performance.apply(np.mean).idxmin() + "; Logistic Loss = "  + str(self.model_performance.apply(np.mean).min()))
+
+        return self.best_model
+
+    def getBestPrediction(self, train_data, test_data):
+
+        model = self.getBestModel()
+
+        model.fit(train_data.getXFull(), train_data.getYFull())
+
+        return model.predict_proba(test_data)[:,1]
 
 
 
 
-def predictData(competitionType):
-
-    print("Loading data...")
-
-    # Load the data from the CSV files
-    dl = DataLoader("datasets/", "17_07_2018")
-    training_data, prediction_data = dl.read()
-
-    features = [f for f in list(training_data) if "feature" in f]
-    Y = training_data['target_' + competitionType]
-    X = training_data[features]
-
-#     for i in {'id', 'era', 'data_type', 'target'}:
-#         X = X.drop(i, axis=1)
-
-    models = {'logistic' : linear_model.LogisticRegression(n_jobs=1),
-                  'naiveBayes' : naive_bayes.GaussianNB(),
-                  'randomForest' : ensemble.RandomForestClassifier(),
-                  'extraTrees' : ensemble.ExtraTreesClassifier(),
-                  # 'gradientBoosting' : ensemble.GradientBoostingClassifier(),
-                  'adaBoost' : ensemble.AdaBoostClassifier()}
-
-    model_performance = {}
-
-    # splits = 5
-    splits = 1
-    ss = ShuffleSplit(n_splits=splits, test_size=0.25)
-    for train_index, test_index in ss.split(training_data):
-        Y_test = Y[train_index]
-        X_test = X.iloc[train_index]
-
-        for name, model in models.items():#svm.SVC(probability= True)
-
-            print("Training " + name + "...")
-            # Your model is trained on the numerai_training_data
-            model.fit(X_test, Y_test)
-
-            print("Predicting...")
-            # Your trained model is now used to make predictions on the numerai_tournament_data
-            # The model returns two columns: [probability of 0, probability of 1]
-            # We are just interested in the probability that the target is 1.
-            y_prediction = model.predict_proba(X.iloc[test_index])
-            results = y_prediction[:, 1]
-
-            if not name in model_performance:
-                model_performance[name] = []
-
-            model_performance[name].append(metrics.log_loss(Y[test_index], results))
-
-
-            print(np.mean(np.array(model_performance[name])))
-            print("Writing predictions to predictions.csv")
-            # Save the predictions out to a CSV file
-
-    best_model = ""
-    best_acc = 0
-
-    for mod_name, acc in model_performance.items():
-        mean = np.mean(np.array(acc))
-        if mean > best_acc:
-            best_acc = mean
-            best_model = mod_name
-
-    final_model = models[best_model].fit(X_test,Y_test)
-    results = final_model.predict_proba(prediction_data[features])[:,1]
-
-    print("The final model chosen is " + best_model + " with accuracy " + str(best_acc))
-
-    results_df = pd.DataFrame(data={'probability': results})
-    joined = pd.DataFrame(prediction_data["id"]).join(results_df)
-    dl.write(joined)
-    # Now you can upload these predictions on numer.ai
 
 
 
@@ -221,9 +179,17 @@ if __name__ == '__main__':
     
     train, test = dl.getData('bernie')
     
-    tester = modelTester(1, 0.25)
+    tester = ModelTester(5, 0.25)
 
     tester.testAllSplits(train)
+
+    results = tester.getBestPrediction(train, test[dl.features])
+
+    results_df = pd.DataFrame(data={'probability': results})
+    results_df = pd.DataFrame(test["id"]).join(results_df)
+    dl.write(results_df)
+
+
 
 
     # predictData('bernie')
