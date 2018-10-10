@@ -11,25 +11,33 @@ from model_automation import *
 # 4) automate with numerapi and other such tools
 
 
-if __name__ == '__main__':
-
-    dl = DataLoader("datasets/", "17_07_2018")
+def predictNumerai():
+    dl = DataLoader()
+    dl.downloadLatest()
     dl.read()
     
-    train, test = dl.getData('bernie')
+    comp = 'bernie'
+
+    train, test = dl.getData(comp)
+    # train.generatePolynomialFeatures()
+    # print(test)
+    # test = train.setPolynomialFeatures(test)
     
     tester = ModelTester(5, 0.25)
 
     tester.testAllSplits(train)
 
-    results = tester.getBestPrediction(train, test[dl.features])
+    results = tester.getBestPrediction(train, test)
 
-    results_df = pd.DataFrame(data={'probability': results})
-    results_df = pd.DataFrame(test["id"]).join(results_df)
-    
+    results_df = pd.DataFrame(data={'probability_'+comp: results})
+    results_df = pd.DataFrame(test.getID()).join(results_df)
+
     dl.write(results_df)
+    dl.uploadResults(comp)
+    dl.getSubmissionStatus()
 
+    print("Complete.")
 
+if __name__ == '__main__':
+    predictNumerai()
 
-
-    # predictData('bernie')

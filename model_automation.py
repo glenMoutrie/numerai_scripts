@@ -22,7 +22,7 @@ class ModelTester():
 
     def testAllSplits(self, data):
 
-        for train_i, test_i in self.ss.split(data.getXFull()):
+        for train_i, test_i in self.ss.split(data.getX()):
 
             data.updateSplit(train_i, test_i)
             self.splits_performed += 1
@@ -63,6 +63,6 @@ class ModelTester():
 
         model = self.getBestModel()
 
-        model.fit(train_data.getXFull(), train_data.getYFull())
+        model.fit(train_data.getX(), train_data.getY())
 
-        return model.predict_proba(test_data)[:,1]
+        return model.predict_proba(test_data.getX())[:,1]

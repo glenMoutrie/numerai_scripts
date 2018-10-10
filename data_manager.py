@@ -3,46 +3,60 @@ import os
 import numerapi as nmapi
 import pandas as pd
 import numpy as np
+from sklearn.preprocessing import PolynomialFeatures
+from data_sets import *
 
 class NumeraiDataManager():
 
-	key = None
-	api_conn = None
-	user = ""
-	download_loc = ""
+    key = None
+    api_conn = None
+    user = ""
+    download_loc = ""
+    pred_file = "predictions.csv"
 
-	def __init__(self, key_loc = "api_key", user = "GBOT", download_loc = "datasets"):
+    def __init__(self, key_loc = "api_key", download_loc = "datasets/"):
 
-		self.user = user
-		self.readKey(key_loc)
-		self.connect()
-
-
-	def readKey(self, key_loc):
-
-		file = io.open(key_loc)
+        self.readKey(key_loc)
+        self.download_loc = download_loc
+        self.connect()
 
 
-		self.key = file.read()
+    def readKey(self, key_loc):
 
-		file.close()
+        file = io.open(key_loc)
 
-	def connect(self):
+        output = file.read()
+        output = output.split("\n")
 
-		self.api_conn = nmapi.NumerAPI(self.user, self.key)
+        self.user = output[0]
+        self.key = output[1]
 
-	def downloadLatest(self):
+        file.close()
 
-		round_num = api.get_current_round()
-		file_name = "numerai_dataset_" + str(round_num)
+    def connect(self):
 
-		if file_name in os.listdir(self.download_loc):
-			self.api_conn.download_current_dataset(self.download_loc + "/", unzip = True)
-		else:
-			print("Competion data for round " + round_num + " already downloaded.")
+        self.api_conn = nmapi.NumerAPI(self.user, self.key)
 
-	def uploadResults():
-		pass
+    def downloadLatest(self):
+
+        round_num = self.api_conn.get_current_round()
+        self.sub_folder = "numerai_dataset_" + str(round_num)
+
+        if not self.sub_folder in os.listdir(self.download_loc):
+            self.api_conn.download_current_dataset(self.download_loc, unzip = True)
+        else:
+            print("Competion data for round " + str(round_num) + " already downloaded.")
+
+        self.sub_folder = self.sub_folder + "/"
+
+    def uploadResults(self, name):
+
+        comp_num = self.api_conn.tournament_name2number(name)
+        res = self.api_conn.upload_predictions(self.download_loc + self.sub_folder + self.pred_file, tournament=comp_num)
+        print(res)
+
+    def getSubmissionStatus(self):
+        print(self.api_conn.submission_status())
 
 
 
@@ -54,82 +68,24 @@ class DataLoader(NumeraiDataManager):
 
 
     def read(self):
-        self.train = pd.read_csv(self.download_loc + self.training_data_file, header = 0)
-        self.test = pd.read_csv(self.download_loc + self.test_data_file, header = 0)
-
-        self.features = [f for f in list(self.train) if "feature" in f]
+        self.train = pd.read_csv(self.download_loc + self.sub_folder + self.training_data_file, header = 0)
+        self.test = pd.read_csv(self.download_loc + self.sub_folder + self.test_data_file, header = 0)
 
     def write(self, output):
-        output.to_csv(self.download_loc + "predictions.csv", index = False)
+        output.to_csv(self.download_loc + self.sub_folder + self.pred_file, index = False)
 
     def getData(self, competition_type):
-        self.train = DataSet(self.train[self.features], self.train['target_' + competition_type])
-        self.test = self.test
+        self.train = TrainSet(self.train, competition_type)
+        self.test = TestSet(self.test, competition_type)
 
         return self.train, self.test
-		
-
-
-
-
-class DataSet():
-
-    y_full = np.ndarray(None)
-    x_full = np.ndarray(None)
-
-    y_test_split = np.ndarray(None)
-    y_train_split = np.ndarray(None)
-
-    x_test_split = np.ndarray(None)
-    x_train_split = np.ndarray(None)
-
-    
-
-    def __init__(self, X, Y):
-
-        self.y_full = self.y_test_split = Y
-        self.x_full = self.x_test_split = X
-
-        self.N = Y.shape[0]
-        self.split_index = {'train' : [i for i in range(0,self.N)], 'test' : []}
-
-    def updateSplit(self, train_ind, test_ind):
-
-        self.y_train_split = self.y_full[train_ind]
-        self.x_train_split = self.x_full.iloc[train_ind]
-
-        self.x_test_split = self.x_full.iloc[test_ind]
-        self.y_test_split = self.y_full[test_ind]
-
-        self.split_index = {'train' : train_ind, 'test' : test_ind}
-
-    def getTrainingData(self):
-        return self.y_train_split, self.x_train_split
-
-    def getTestData(self):
-        return self.y_test_split, self.x_test_split
-
-    def getY(self, train):
-        if train:
-            return self.y_train_split
-        else:
-            return self.y_test_split
-
-    def getX(self, train):
-        if train:
-            return self.x_train_split
-        else:
-            return self.x_test_split
-
-    def getXFull(self):
-        return self.x_full
-
-    def getYFull(self):
-        return self.y_full
+        
 
 
 if __name__ == "__main__":
-	dl = DataLoader()
+    dl = DataLoader()
+    dl.downloadLatest()
+    dl.uploadResults('bernie')
 
 
 
