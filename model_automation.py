@@ -6,7 +6,7 @@ from sklearn.model_selection import ShuffleSplit
 class ModelTester():
 
     models = {'logistic' : linear_model.LogisticRegression(n_jobs=1),
-                  'naiveBayes' : naive_bayes.GaussianNB()}
+                  'naiveBayes' : naive_bayes.GaussianNB()}#,
                   # 'randomForest' : ensemble.RandomForestClassifier(),
                   # 'extraTrees' : ensemble.ExtraTreesClassifier(),
                   # 'gradientBoosting' : ensemble.GradientBoostingClassifier(),
@@ -53,9 +53,11 @@ class ModelTester():
     def getBestModel(self):
 
         print(self.model_performance)
-        self.best_model = self.models[self.model_performance.apply(np.mean).idxmin()]
+        print(self.model_performance.apply(np.mean))
+        print(self.model_performance.apply(np.mean).idxmax())
+        self.best_model = self.models[self.model_performance.apply(np.mean).idxmax()]
 
-        print("Best model: " + self.model_performance.apply(np.mean).idxmin() + "; Logistic Loss = "  + str(self.model_performance.apply(np.mean).min()))
+        print("Best model: " + self.model_performance.apply(np.mean).idxmax() + "; Logistic Loss = "  + str(self.model_performance.apply(np.mean).max()))
 
         return self.best_model
 

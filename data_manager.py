@@ -49,6 +49,9 @@ class NumeraiDataManager():
 
         self.sub_folder = self.sub_folder + "/"
 
+        if round_num > 131:
+        	self.sub_folder += "numerai_datasets/"
+
     def uploadResults(self, name):
 
         comp_num = self.api_conn.tournament_name2number(name)
@@ -76,7 +79,7 @@ class DataLoader(NumeraiDataManager):
 
     def getData(self, competition_type):
         self.train = TrainSet(self.train, competition_type)
-        self.test = TestSet(self.test, competition_type)
+        self.test = TestSet(self.test, competition_type, self.train.getEras())
 
         return self.train, self.test
         

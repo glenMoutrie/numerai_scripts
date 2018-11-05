@@ -29,8 +29,13 @@ def predictNumerai():
 
     results = tester.getBestPrediction(train, test)
 
-    results_df = pd.DataFrame(data={'probability_'+comp: results})
+    results_col = 'probability_'+comp
+
+    results_df = pd.DataFrame(data={results_col: results})
     results_df = pd.DataFrame(test.getID()).join(results_df)
+
+    results_df[results_col].loc[results_df[results_col] > 0.7] = 0.7
+    results_df[results_col].loc[results_df[results_col] < 0.3] = 0.3
 
     dl.write(results_df)
     dl.uploadResults(comp)
