@@ -49,7 +49,8 @@ class NumeraiDataManager():
 
         self.sub_folder = self.sub_folder + "/"
 
-        if round_num > 131:
+        # The api put the folder in a sub dir. Solustion left here, need to check on this later...
+        if round_num == 131:
         	self.sub_folder += "numerai_datasets/"
 
     def uploadResults(self, name):
@@ -79,7 +80,7 @@ class DataLoader(NumeraiDataManager):
 
     def getData(self, competition_type):
         self.train = TrainSet(self.train, competition_type)
-        self.test = TestSet(self.test, competition_type, self.train.getEras())
+        self.test = TestSet(self.test, competition_type, self.train.getEras(), self.train.numeric_features)
 
         return self.train, self.test
         

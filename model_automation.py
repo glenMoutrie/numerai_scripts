@@ -2,23 +2,31 @@ import pandas as pd
 import numpy as np
 from sklearn import metrics, preprocessing, linear_model, svm, metrics, ensemble, naive_bayes
 from sklearn.model_selection import ShuffleSplit
+from sklearn.feature_selection import SelectFromModel
+from sklearn.svm import LinearSVC
+from sklearn.pipeline import Pipeline
+from xgboost import XGBClassifier
+import time
 
 class ModelTester():
 
-    models = {'logistic' : linear_model.LogisticRegression(n_jobs=1),
-                  'naiveBayes' : naive_bayes.GaussianNB()}#,
-                  # 'randomForest' : ensemble.RandomForestClassifier(),
-                  # 'extraTrees' : ensemble.ExtraTreesClassifier(),
-                  # 'gradientBoosting' : ensemble.GradientBoostingClassifier(),
-                  # 'adaBoost' : ensemble.AdaBoostClassifier()}
+    def __init__(self, models, splits = 5, test_size = 0.25) :
 
-    def __init__(self, splits = 5, test_size = 0.25) :
+        # self.appendFeatureSelection()
+
+        self.models = models
         self.splits = splits
         self.splits_performed = 0
+
         self.ss = ShuffleSplit(n_splits = splits, test_size = test_size)
         self.model_performance = pd.DataFrame(columns = list(self.models.keys()))
         self.best_model = None
 
+    def appendFeatureSelection(self):
+        for name, model in zip(self.models.keys(), self.models.values()):
+            print(model)
+            self.models[name] = Pipeline([('feature selection', SelectFromModel(model))
+                ('model', model)])
 
     def testAllSplits(self, data):
 
@@ -30,17 +38,22 @@ class ModelTester():
             self.testAllModels(data,  self.models)
 
             print("Splits tested: " + str(self.splits_performed))
-            print("Test acc: " + str(self.model_performance) + "\n")
 
 
 
     def testAllModels(self, data, models):
 
-        mp_update = {model: self.testModel(data, models.get(model)) for model in models.keys()}
+        mp_update = {model: self.testModel(data, models.get(model), model) for model in models.keys()}
 
         self.model_performance = self.model_performance.append(mp_update, ignore_index = True)
 
-    def testModel(self, data, model):
+
+    def testModel(self, data, model, name, verbose = True):
+
+        t1 = time.time()
+
+        if verbose:
+            print("Testing " + name , end = "")
 
         model.fit(data.getX(True), data.getY(True))
 
@@ -48,16 +61,21 @@ class ModelTester():
 
         results = y_prediction[:, 1]
 
-        return metrics.log_loss(data.getY(False), results)
+        duration = time.time() - t1
+        log_loss = metrics.log_loss(data.getY(False), results)
+
+        if verbose:
+            print("Time taken: " + str(duration) + " Log loss: " + str(log_loss))
+
+        return log_loss
 
     def getBestModel(self):
 
-        print(self.model_performance)
         print(self.model_performance.apply(np.mean))
-        print(self.model_performance.apply(np.mean).idxmax())
-        self.best_model = self.models[self.model_performance.apply(np.mean).idxmax()]
+        print(self.model_performance.apply(np.mean).idxmin())
+        self.best_model = self.models[self.model_performance.apply(np.mean).idxmin()]
 
-        print("Best model: " + self.model_performance.apply(np.mean).idxmax() + "; Logistic Loss = "  + str(self.model_performance.apply(np.mean).max()))
+        print("Best model: " + self.model_performance.apply(np.mean).idxmin() + "; Logistic Loss = "  + str(self.model_performance.apply(np.mean).min()))
 
         return self.best_model
 

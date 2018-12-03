@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import PolynomialFeatures
-
+from feature_selection import FeatureSelection
 
 class DataSet():
 
@@ -9,14 +9,19 @@ class DataSet():
 
     poly = None
 
+    test = False
+
     def __init__(self, data, competition_type):
 
         self.full_set = data
 
+        # self.test = True
+
         self.numeric_features = [f for f in list(self.full_set) if "feature" in f]
 
         # Test just the first four features
-        # self.numeric_features = self.numeric_features[0:3]
+        if self.test:
+            self.numeric_features = self.numeric_features[0:3]
         
         self.category_features = "era"
 
@@ -25,9 +30,24 @@ class DataSet():
 
         self.updateFeaturesList()
 
-        self.generatePolynomialFeatures(2)
+        self.generatePolynomialFeatures(2, False)
+
+        if self.test:
+            print(self.full_set)
 
         self.N = data.shape[0]
+
+    def reduceFeatureSpace(self, min_include):
+
+        print("Reducing Feature Space\nInitial feature set:")
+        print(self.numeric_features)
+
+        # If True then this will re-run for every competion
+        self.feature_selector = FeatureSelection(self.full_set, self.numeric_features, self.y_col)
+        self.numeric_features = self.feature_selector.selectBestFeatures(min_include)
+
+        print("New feature space:")
+        print(self.numeric_features)
 
 
     def updateFeaturesList(self, numeric_features = None, category_features = None):
@@ -50,31 +70,60 @@ class DataSet():
         return self.full_set[self.y_col]
 
     # TODO: fix poly for full_set
-    def generatePolynomialFeatures(self, poly_degree = 2):
+    def generatePolynomialFeatures(self, poly_degree = 2, interaction = False, log = True):
 
-        self.poly = PolynomialFeatures(degree = poly_degree, include_bias = False)
+        if interaction:
 
-        poly_fit = self.poly.fit_transform(self.full_set[self.numeric_features])
 
-        self.numeric_features = self.poly.get_feature_names(self.numeric_features)
+            self.poly = PolynomialFeatures(degree = poly_degree, include_bias = False)
 
-        self.updateFeaturesList()
+            poly_fit = self.poly.fit_transform(self.full_set[self.numeric_features])
 
-        self.full_set = pd.concat([self.full_set["id"],
-            self.full_set[self.y_col], 
-            self.full_set[self.category_features],
-            pd.DataFrame(poly_fit, columns = self.numeric_features)], axis = 1)
+            self.numeric_features = self.poly.get_feature_names(self.numeric_features)
+
+            self.updateFeaturesList()
+
+            self.full_set = pd.concat([self.full_set["id"],
+                self.full_set[self.y_col], 
+                self.full_set[self.category_features],
+                pd.DataFrame(poly_fit, columns = self.numeric_features)], axis = 1)
+
+        else:
+
+            new_features = []
+
+            for power in range(2, poly_degree + 1):
+                for col in self.numeric_features:
+
+                    feature_name = col + "_" + str(power)
+                    self.full_set[feature_name] = np.power(self.full_set[col], power)
+                    new_features.append(feature_name)
+
+            if log:
+
+                for col in self.numeric_features:
+
+                    feature_name = "log_"+col
+                    self.full_set[feature_name] = np.power(self.full_set[col], power)
+                    new_features.append(feature_name)
+
+            self.numeric_features += new_features
+            self.features += new_features
+
 
 
 class TestSet(DataSet):
 
-    def __init__(self, data, competition_type, era_cat):
+    def __init__(self, data, competition_type, era_cat, numeric_features):
 
         super(TestSet, self).__init__(data, competition_type)
 
+        self.numeric_features = numeric_features
+
         self.eras = era_cat
         # Another gross hack with self.category_features[0]
-        self.full_set[self.category_features] = pd.Categorical(self.full_set[self.category_features], categories = era_cat)
+        self.full_set[self.category_features] = pd.Categorical(self.full_set[self.category_features], 
+            ordered = True, categories = era_cat)
 
 
 class TrainSet(DataSet):
@@ -85,9 +134,13 @@ class TrainSet(DataSet):
 
         super(TrainSet, self).__init__(data, competition_type)
 
+
+        self.reduceFeatureSpace(0.1)
+
         # A HACK THAT I NEED TO FIX (subset category features to get 0)
         self.eras = self.full_set[self.category_features].unique()
-        self.full_set[self.category_features] = pd.Categorical(self.full_set[self.category_features], categories = self.eras)
+        self.full_set[self.category_features] = pd.Categorical(self.full_set[self.category_features],
+            ordered = True, categories = self.eras)
 
         self.split_index = {'train' : [i for i in range(0,self.N)], 'test' : []}
 
@@ -130,14 +183,14 @@ class FeatureGenerator():
 
 
 
-class NumeraiCompetitionSet():
+# class NumeraiCompetitionSet():
 
-    def __init__(self, data, competition_type):
-        self.test = TestSet(data, competition_type)
-        self.train = TrainSet(data, competition_type, test.getEras())
+#     def __init__(self, data, competition_type):
+#         self.train = TrainSet(data, competition_type)
+#         self.test = TestSet(data, competition_type, train.getEras(), train.numeric_features)
 
-    def setPolynomial(self, degree = 2):
-        self.poly = PolynomialFeatures(degree, include_bias = False)
+#     def setPolynomial(self, degree = 2):
+#         self.poly = PolynomialFeatures(degree, include_bias = False)
 
 
 

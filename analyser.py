@@ -5,43 +5,67 @@ from model_automation import *
 
 
 # Plan:
-# 1) create a data loader that creates a NumeraiData class
-# 2) Define a NumeraiData Class with features, x data and y data
+# 1) create a data loader that creates a NumeraiData class -- DONE
+# 2) Define a NumeraiData Class with features, x data and y data -- DONE
 # 3) finish the model tester that returns the model results, estimating in parallel using multiprocessing
-# 4) automate with numerapi and other such tools
+# 4) automate with numerapi and other such tools -- DONE
+# 5) Better predictive models, look at alternaitves, betters model specifications
+# 6) Automatic feature selection
+# 7) Feature engineering (look at clustering etc)
 
 
 def predictNumerai():
-    dl = DataLoader()
-    dl.downloadLatest()
-    dl.read()
+
+    # for comp in ['jordan', 'ken', 'charles']:
+    for comp in ['bernie','elizabeth', 'jordan', 'ken', 'charles']:
+
+        print('Running on comp ' + comp)
+        dl = DataLoader()
+        dl.downloadLatest()
+        dl.read()
+
+        os.environ["OMP_NUM_THREADS"] = "8"
+
+        train, test = dl.getData(comp)
+        # train.generatePolynomialFeatures()
+        # print(test)
+        # test = train.setPolynomialFeatures(test)
     
-    comp = 'bernie'
 
-    train, test = dl.getData(comp)
-    # train.generatePolynomialFeatures()
-    # print(test)
-    # test = train.setPolynomialFeatures(test)
-    
-    tester = ModelTester(5, 0.25)
+        models = {
+    # 'logistic' : linear_model.LogisticRegression(),
+    #               'naiveBayes' : naive_bayes.GaussianNB(),
+    #               'randomForest' : ensemble.RandomForestClassifier(),
+    #               'extraTrees' : ensemble.ExtraTreesClassifier(),
+    #               'gradientBoosting' : ensemble.GradientBoostingClassifier(),
+                  'xgboost' : XGBClassifier()
+                  # 'adaBoost' : ensemble.AdaBoostClassifier()
+                  }
+                  
+        tester = ModelTester(models, 1, 0.25)
 
-    tester.testAllSplits(train)
+        tester.testAllSplits(train)
 
-    results = tester.getBestPrediction(train, test)
+        results = tester.getBestPrediction(train, test)
 
-    results_col = 'probability_'+comp
+        results_col = 'probability_'+comp
 
-    results_df = pd.DataFrame(data={results_col: results})
-    results_df = pd.DataFrame(test.getID()).join(results_df)
+        results_df = pd.DataFrame(data={results_col: results})
+        results_df = pd.DataFrame(test.getID()).join(results_df)
 
-    results_df[results_col].loc[results_df[results_col] > 0.7] = 0.7
-    results_df[results_col].loc[results_df[results_col] < 0.3] = 0.3
+        results_df[results_col].loc[results_df[results_col] > 0.7] = 0.7
+        results_df[results_col].loc[results_df[results_col] < 0.3] = 0.3
 
-    dl.write(results_df)
-    dl.uploadResults(comp)
-    dl.getSubmissionStatus()
+        dl.write(results_df)
+        dl.uploadResults(comp)
 
-    print("Complete.")
+        try:
+            dl.getSubmissionStatus()
+        except ValueError as error:
+            print("Caught error in upload for " + comp)
+            print(error)
+
+        print("Complete.")
 
 if __name__ == '__main__':
     predictNumerai()
