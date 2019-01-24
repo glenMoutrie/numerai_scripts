@@ -79,7 +79,11 @@ class DataSet():
 
             poly_fit = self.poly.fit_transform(self.full_set[self.numeric_features])
 
-            self.numeric_features = self.poly.get_feature_names(self.numeric_features)
+            new_features = self.poly.get_feature_names(self.numeric_features)
+
+            new_features = list(map(lambda x: x.replace(" ", "_"), new_features))
+
+            self.numeric_features = new_features
 
             self.updateFeaturesList()
 
@@ -135,7 +139,7 @@ class TrainSet(DataSet):
         super(TrainSet, self).__init__(data, competition_type)
 
 
-        self.reduceFeatureSpace(0.1)
+        self.reduceFeatureSpace(0.05)
 
         # A HACK THAT I NEED TO FIX (subset category features to get 0)
         self.eras = self.full_set[self.category_features].unique()

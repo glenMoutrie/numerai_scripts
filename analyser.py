@@ -10,14 +10,17 @@ from model_automation import *
 # 3) finish the model tester that returns the model results, estimating in parallel using multiprocessing
 # 4) automate with numerapi and other such tools -- DONE
 # 5) Better predictive models, look at alternaitves, betters model specifications
-# 6) Automatic feature selection
+# 6) Automatic feature selection --DONE
 # 7) Feature engineering (look at clustering etc)
+# 8) Fix the cross terms issue by removing white space in names
+# 9) Potentially try a deep learning approach...
+# 10) Try an ensemble approach accross different epochs
 
 
 def predictNumerai():
 
-    # for comp in ['jordan', 'ken', 'charles']:
-    for comp in ['bernie','elizabeth', 'jordan', 'ken', 'charles']:
+    # for comp in ['frank', 'hillary']:
+    for comp in ['bernie','elizabeth', 'jordan', 'ken', 'charles', 'frank', 'hillary']:
 
         print('Running on comp ' + comp)
         dl = DataLoader()
@@ -41,7 +44,7 @@ def predictNumerai():
                   'xgboost' : XGBClassifier()
                   # 'adaBoost' : ensemble.AdaBoostClassifier()
                   }
-                  
+
         tester = ModelTester(models, 1, 0.25)
 
         tester.testAllSplits(train)
