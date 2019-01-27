@@ -80,7 +80,7 @@ class DataLoader(NumeraiDataManager):
 
     def getData(self, competition_type):
         self.train = TrainSet(self.train, competition_type)
-        self.test = TestSet(self.test, competition_type, self.train.getEras(), self.train.numeric_features)
+        self.test = TestSet(self.test, competition_type, self.train.getEras(), self.train.numeric_features, self.train.cluster_model,  self.train.clusters)
 
         return self.train, self.test
         

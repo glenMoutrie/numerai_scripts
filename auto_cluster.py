@@ -1,6 +1,7 @@
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 import pandas as pd
+import numpy as np
 
 # 1) Reduce dimensions - maybe add this later seems a little overkill
 # 2) Cluster based on test data
@@ -92,6 +93,8 @@ if __name__ == "__main__":
 	cluster = ClusterFeature(test_data, None)
 
 	print(cluster.assignClusters(new_data))
+	print(np.unique(cluster.assignClusters(new_data)))
+
 
 	print(cluster.range_d(5.1,3.5,0.2))
 

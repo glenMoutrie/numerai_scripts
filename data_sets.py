@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import PolynomialFeatures
 from feature_selection import FeatureSelection
+from auto_cluster import ClusterFeature
 
 class DataSet():
 
@@ -118,16 +119,19 @@ class DataSet():
 
 class TestSet(DataSet):
 
-    def __init__(self, data, competition_type, era_cat, numeric_features):
+    def __init__(self, data, competition_type, era_cat, numeric_features, cluster_model, clusters):
 
         super(TestSet, self).__init__(data, competition_type)
 
         self.numeric_features = numeric_features
 
+        self.full_set["cluster"] = pd.Categorical(cluster_model.assignClusters(self.full_set[self.numeric_features]), categories = clusters)
+
+        self.full_set += ["cluster"]
+
         self.eras = era_cat
         # Another gross hack with self.category_features[0]
-        self.full_set[self.category_features] = pd.Categorical(self.full_set[self.category_features], 
-            ordered = True, categories = era_cat)
+        self.full_set[self.category_features] = pd.Categorical(self.full_set[self.category_features], ordered = True, categories = era_cat)
 
 
 class TrainSet(DataSet):
@@ -138,8 +142,18 @@ class TrainSet(DataSet):
 
         super(TrainSet, self).__init__(data, competition_type)
 
+        # self.reduceFeatureSpace(0.05)
 
-        self.reduceFeatureSpace(0.05)
+        print("Estimating Clusters")
+        self.cluster_model = ClusterFeature(self.full_set[self.numeric_features], None)
+
+        cluster_id = self.cluster_model.assignClusters(self.full_set[self.numeric_features])
+
+        self.clusters = np.unique(cluster_id)
+
+        self.full_set["cluster"] = pd.Categorical(cluster_id, categories = self.clusters)
+
+        self.features += ["cluster"]
 
         # A HACK THAT I NEED TO FIX (subset category features to get 0)
         self.eras = self.full_set[self.category_features].unique()
