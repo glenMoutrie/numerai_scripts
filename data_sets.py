@@ -127,7 +127,7 @@ class TestSet(DataSet):
 
         self.full_set["cluster"] = pd.Categorical(cluster_model.assignClusters(self.full_set[self.numeric_features]), categories = clusters)
 
-        self.full_set += ["cluster"]
+        self.features += ["cluster"]
 
         self.eras = era_cat
         # Another gross hack with self.category_features[0]

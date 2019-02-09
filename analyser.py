@@ -17,22 +17,25 @@ from model_automation import *
 # 10) Try an ensemble approach accross different epochs
 
 
-def predictNumerai():
+def predictNumerai(test_run = False):
 
     # for comp in ['frank', 'hillary']:
     for comp in ['bernie','elizabeth', 'jordan', 'ken', 'charles', 'frank', 'hillary']:
 
         print('Running on comp ' + comp)
         dl = DataLoader()
-        dl.downloadLatest()
-        dl.read()
+
+        if not test_run:
+            dl.downloadLatest()
+
+        dl.read(test_run)
 
         os.environ["OMP_NUM_THREADS"] = "8"
 
         train, test = dl.getData(comp)
-        # train.generatePolynomialFeatures()
-        # print(test)
-        # test = train.setPolynomialFeatures(test)
+        train.generatePolynomialFeatures()
+        print(test)
+        test = train.setPolynomialFeatures(test)
     
 
         models = {
@@ -60,7 +63,9 @@ def predictNumerai():
         results_df[results_col].loc[results_df[results_col] < 0.3] = 0.3
 
         dl.write(results_df)
-        dl.uploadResults(comp)
+
+        if not test_run:
+            dl.uploadResults(comp)
 
         try:
             dl.getSubmissionStatus()
@@ -71,5 +76,5 @@ def predictNumerai():
         print("Complete.")
 
 if __name__ == '__main__':
-    predictNumerai()
+    predictNumerai(True)
 

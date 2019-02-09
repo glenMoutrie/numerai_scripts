@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import PolynomialFeatures
 from data_sets import *
+from synthetic_numerai_data import SyntheticNumeraiData
 
 class NumeraiDataManager():
 
@@ -71,10 +72,21 @@ class DataLoader(NumeraiDataManager):
     test_data_file = 'numerai_tournament_data.csv'
 
 
-    def read(self):
-        self.train = pd.read_csv(self.download_loc + self.sub_folder + self.training_data_file, header = 0)
-        self.test = pd.read_csv(self.download_loc + self.sub_folder + self.test_data_file, header = 0)
+    def read(self, test = False):
 
+        if test:
+            synthetic_data = SyntheticNumeraiData()
+
+            self.train = synthetic_data.getTrainData()
+            self.test = synthetic_data.getTestData()
+
+        else:
+
+            self.train = pd.read_csv(self.download_loc + self.sub_folder + self.training_data_file, header = 0)
+            self.test = pd.read_csv(self.download_loc + self.sub_folder + self.test_data_file, header = 0)
+
+
+        
     def write(self, output):
         output.to_csv(self.download_loc + self.sub_folder + self.pred_file, index = False)
 
