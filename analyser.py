@@ -12,6 +12,9 @@ from model_automation import *
 # 5) Better predictive models, look at alternaitves, betters model specifications
 # 6) Automatic feature selection --DONE
 # 7) Feature engineering (look at clustering etc)
+# 7 a) Clustering -- DONE
+#   b) Add principal components
+#   c) Add predictions from other models
 # 8) Fix the cross terms issue by removing white space in names
 # 9) Potentially try a deep learning approach...
 # 10) Try an ensemble approach accross different epochs
@@ -33,9 +36,9 @@ def predictNumerai(test_run = False):
         os.environ["OMP_NUM_THREADS"] = "8"
 
         train, test = dl.getData(comp)
-        train.generatePolynomialFeatures()
-        print(test)
-        test = train.setPolynomialFeatures(test)
+        # train.generatePolynomialFeatures()
+        # print(test)
+        # test = train.setPolynomialFeatures(test)
     
 
         models = {
@@ -54,7 +57,7 @@ def predictNumerai(test_run = False):
 
         results = tester.getBestPrediction(train, test)
 
-        results_col = 'probability_'+comp
+        results_col = 'probability_' + comp
 
         results_df = pd.DataFrame(data={results_col: results})
         results_df = pd.DataFrame(test.getID()).join(results_df)
@@ -76,5 +79,5 @@ def predictNumerai(test_run = False):
         print("Complete.")
 
 if __name__ == '__main__':
-    predictNumerai(True)
+    predictNumerai(False)
 

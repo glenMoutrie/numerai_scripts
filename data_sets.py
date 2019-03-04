@@ -124,10 +124,12 @@ class TestSet(DataSet):
         super(TestSet, self).__init__(data, competition_type)
 
         self.numeric_features = numeric_features
+        self.updateFeaturesList()
 
         self.full_set["cluster"] = pd.Categorical(cluster_model.assignClusters(self.full_set[self.numeric_features]), categories = clusters)
 
         self.features += ["cluster"]
+        # self.category_features += ["cluster"]
 
         self.eras = era_cat
         # Another gross hack with self.category_features[0]
@@ -143,6 +145,7 @@ class TrainSet(DataSet):
         super(TrainSet, self).__init__(data, competition_type)
 
         # self.reduceFeatureSpace(0.05)
+        self.updateFeaturesList()
 
         print("Estimating Clusters")
         self.cluster_model = ClusterFeature(self.full_set[self.numeric_features], None)

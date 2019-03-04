@@ -51,6 +51,11 @@ class FeatureSelection:
     def selectBestFeatures(self,min_include, exclude_intercept = True):
         best_vars = list(self.output.loc[self.output['probability'] > min_include]['variable'])
 
+        if len(best_vars) < 1:
+            print("No features found with good predictive probability")
+            best_vars = list(self.output.loc[self.output['probability'] == max(self.output['probability'])]['variable'])
+
+
         if exclude_intercept:
             best_vars = list(compress(best_vars, list(map(lambda x: x != '(Intercept)', best_vars))))
 

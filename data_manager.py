@@ -41,6 +41,9 @@ class NumeraiDataManager():
     def downloadLatest(self):
 
         round_num = self.api_conn.get_current_round()
+        # Hack as api appears to have broken...
+        # round_num = 148
+
         self.sub_folder = "numerai_dataset_" + str(round_num)
 
         if not self.sub_folder in os.listdir(self.download_loc):

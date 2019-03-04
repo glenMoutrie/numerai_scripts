@@ -55,6 +55,8 @@ class ModelTester():
         if verbose:
             print("Testing " + name , end = "")
 
+        # print(data.getX(True))
+
         model.fit(data.getX(True), data.getY(True))
 
         y_prediction = model.predict_proba(data.getX(False))

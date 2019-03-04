@@ -2,6 +2,7 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 import pandas as pd
 import numpy as np
+import multiprocess as mp
 
 # 1) Reduce dimensions - maybe add this later seems a little overkill
 # 2) Cluster based on test data
@@ -44,6 +45,8 @@ class ClusterFeature:
 
 		if self.clusters is None:
 			self.models = [KMeans(n_clusters = i) for i in range(2, self.max_cluster + 1)]
+
+			# pool = mp.Pool()
 			self.models = list(map(lambda x: x.fit(data), self.models))
 
 			n = len(self.models) - 1
