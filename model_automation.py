@@ -87,4 +87,8 @@ class ModelTester():
 
         model.fit(train_data.getX(), train_data.getY())
 
-        return model.predict_proba(test_data.getX())[:,1]
+        output =  model.predict_proba(test_data.getX())[:,1]
+
+        print("Test Log Loss: " + str(metrics.log_loss(test_data.getY("test"), model.predict_proba(test_data.getX("test"))[:,1])))
+
+        return output

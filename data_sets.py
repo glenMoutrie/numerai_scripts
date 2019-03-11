@@ -134,7 +134,23 @@ class TestSet(DataSet):
         self.eras = era_cat
         # Another gross hack with self.category_features[0]
         self.full_set[self.category_features] = pd.Categorical(self.full_set[self.category_features], ordered = True, categories = era_cat)
+    
+    def getX(self, data_type = None):
 
+        if data_type is None:
+            subset = [True] * self.full_set.shape[0]
+        else:
+            subset = self.full_set["data_type"] == data_type
+
+        return pd.get_dummies(self.full_set.loc[subset, self.features])
+
+    def getY(self, data_type = None):
+        if data_type is None:
+            subset = [True] * self.full_set.shape[0]
+        else:
+            subset = self.full_set["data_type"] == data_type
+
+        return self.full_set.loc[subset, self.y_col]
 
 class TrainSet(DataSet):
 

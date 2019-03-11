@@ -55,7 +55,7 @@ class NumeraiDataManager():
 
         # The api put the folder in a sub dir. Solustion left here, need to check on this later...
         if round_num == 131:
-        	self.sub_folder += "numerai_datasets/"
+            self.sub_folder += "numerai_datasets/"
 
     def uploadResults(self, name):
 

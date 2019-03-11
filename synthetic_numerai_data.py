@@ -43,16 +43,20 @@ class SyntheticNumeraiData():
 
 	def generateTestData(self):
 
+		test_obs = round(self.observations * 0.5)
+		valid_obs = round(self.observations * 0.25)
+		live_obs = self.observations - test_obs - valid_obs
+
 		test = pd.DataFrame({'id': self.id,
 			'era': self.eras,
-			'data_type': 'test'})
+			'data_type': ['test'] * test_obs + ['validation'] * valid_obs + ['live'] * live_obs})
 
 		for f in self.features:
 			test[f] = [random.normalvariate(0,1) for i in range(0,self.observations)]
 
 		for c in self.comp:
 			col_name = 'target_' + c
-			test[col_name] = [None for i in range(0, self.observations)]
+			test[col_name] = [random.randint(0,1) for i in range(0, test_obs)] + [None for i in range(0, valid_obs + live_obs)]
 
 		self.test = test
 
