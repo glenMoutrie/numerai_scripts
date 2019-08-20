@@ -21,7 +21,7 @@ class FeatureSelection:
 
     def executeBayesianFeatureSelectionR(self):
         
-        command = "Rscript feature_select.R"
+        command = "Rscript ../feature_select.R"
         command += " " + self.file_location + " "
         command += " " + self.formula + " "
         command += " " + self.output_location
