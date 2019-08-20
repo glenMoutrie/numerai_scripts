@@ -89,6 +89,6 @@ class ModelTester():
 
         output =  model.predict_proba(test_data.getX())[:,1]
 
-        print("Test Log Loss: " + str(metrics.log_loss(test_data.getY("test"), model.predict_proba(test_data.getX("test"))[:,1])))
+        # print("Test Log Loss: " + str(metrics.log_loss(test_data.getY("test"), model.predict_proba(test_data.getX("test"))[:,1])))
 
         return output

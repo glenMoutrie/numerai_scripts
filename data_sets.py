@@ -4,6 +4,13 @@ from sklearn.preprocessing import PolynomialFeatures
 from feature_selection import FeatureSelection
 from auto_cluster import ClusterFeature
 
+"""
+
+This module provides the structure for all data set classes. 
+
+The parent class DataSet contains all of the feature mapping that both the training set and test set need to perform.
+
+"""
 class DataSet():
 
     full_set = np.ndarray(None)
@@ -218,34 +225,6 @@ class FeatureGenerator():
         self.poly = PolynomialFeatures(degree, include_bias = False)
 
 
-
-
-# class NumeraiCompetitionSet():
-
-#     def __init__(self, data, competition_type):
-#         self.train = TrainSet(data, competition_type)
-#         self.test = TestSet(data, competition_type, train.getEras(), train.numeric_features)
-
-#     def setPolynomial(self, degree = 2):
-#         self.poly = PolynomialFeatures(degree, include_bias = False)
-
-
-
-
-    # def generatePolynomialFeatures(self, poly_degree = 2):
-    #     self.poly = PolynomialFeatures(degree = poly_degree, include_bias = False)
-
-    #     output = self.poly.fit_transform(self.x_full)
-
-    #     self.x_full = pd.DataFrame(output, columns = self.poly.get_feature_names(self.x_full.columns))
-
-    #     self.updateSplit(self.split_index['train'], self.split_index['test'])
-
-    # def setPolynomialFeatures(self):
-
-    #     output = self.poly.fit_transform(self.full_set[self.features])
-
-    #     return(pd.DataFrame(output, columns = poly.get_feature_names(self.x_full.columns)))
 
 if __name__ == "__main__":
 
