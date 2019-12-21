@@ -2,7 +2,12 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 import pandas as pd
 import numpy as np
-import multiprocess as mp
+
+import joblib
+from dask.distributed import Client, progress
+
+client = Client(processes = False, threads_per_worker = 16, n_workers = 1)
+# import multiprocessing as mp
 
 # 1) Reduce dimensions - maybe add this later seems a little overkill
 # 2) Cluster based on test data
@@ -44,27 +49,30 @@ class ClusterFeature:
 	def estimateCenters(self, data):
 
 		if self.clusters is None:
-			self.models = [KMeans(n_clusters = i) for i in range(2, self.max_cluster + 1)]
 
-			# pool = mp.Pool()
-			self.models = list(map(lambda x: x.fit(data), self.models))
+			with joblib.parallel_backend('dask'):
 
-			n = len(self.models) - 1
+				self.models = [KMeans(n_clusters = i) for i in range(2, self.max_cluster + 1)]
 
-			self.sse = list(map(lambda x: x.inertia_, self.models))
-			line = list(self.range_d(self.sse[0], self.sse[n], (self.sse[0] - self.sse[n])/n))
+				# pool = mp.Pool()
+				self.models = list(map(lambda x: x.fit(data), self.models))
 
-			# print(self.sse)
-			# print(line)
-			dist_line = list(map(lambda x: x[1] - x[0], zip(self.sse, line)))
-			# print(dist_line)
+				n = len(self.models) - 1
 
-			edge = max(dist_line)
-			self.best = [i for i, j in enumerate(dist_line) if j == edge]
+				self.sse = list(map(lambda x: x.inertia_, self.models))
+				line = list(self.range_d(self.sse[0], self.sse[n], (self.sse[0] - self.sse[n])/n))
 
-			# print(self.best)
+				# print(self.sse)
+				# print(line)
+				dist_line = list(map(lambda x: x[1] - x[0], zip(self.sse, line)))
+				# print(dist_line)
 
-			self.cluster_model = self.models[self.best[0]]
+				edge = max(dist_line)
+				self.best = [i for i, j in enumerate(dist_line) if j == edge]
+
+				# print(self.best)
+
+				self.cluster_model = self.models[self.best[0]]
 
 
 

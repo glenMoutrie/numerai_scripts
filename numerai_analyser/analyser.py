@@ -79,5 +79,5 @@ def predictNumerai(test_run = False):
         print("Complete.")
 
 if __name__ == '__main__':
-    predictNumerai(False)
+    predictNumerai(True)
 
