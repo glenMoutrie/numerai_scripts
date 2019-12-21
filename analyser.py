@@ -19,8 +19,8 @@ from model_automation import *
 
 def predictNumerai():
 
-    # for comp in ['frank', 'hillary']:
-    for comp in ['bernie','elizabeth', 'jordan', 'ken', 'charles', 'frank', 'hillary']:
+    for comp in ['']:
+    # for comp in ['bernie','elizabeth', 'jordan', 'ken', 'charles', 'frank', 'hillary']:
 
         print('Running on comp ' + comp)
         dl = DataLoader()
