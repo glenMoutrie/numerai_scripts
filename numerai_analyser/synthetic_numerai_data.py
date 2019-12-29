@@ -2,6 +2,14 @@ import numpy as np
 import pandas as pd
 import random
 
+
+"""
+SyntheticNumeraiData 
+
+Generates fake data that can be used for unit testing but still adheres to the overall
+structure of numerai
+
+"""
 class SyntheticNumeraiData():
 
 	def __init__(self, observations = 100, num_eras = 4, features = 10, comp = ['bernie']):

@@ -50,7 +50,8 @@ class ClusterFeature:
 
 		if self.clusters is None:
 
-			with joblib.parallel_backend('dask'):
+			# with joblib.parallel_backend('dask'):
+			if True:
 
 				self.models = [KMeans(n_clusters = i) for i in range(2, self.max_cluster + 1)]
 

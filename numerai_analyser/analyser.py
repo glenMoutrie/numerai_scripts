@@ -22,12 +22,20 @@ from model_automation import *
 
 def predictNumerai(test_run = False):
 
+    dl = DataLoader()
+
+    competitions = dl.getCompetitions()
+
+    print('Running on the following competitions:')
+
+    print(competitions)
+
     # for comp in ['frank', 'hillary']:
-    for comp in ['bernie','elizabeth', 'jordan', 'ken', 'charles', 'frank', 'hillary']:
+    # for comp in ['bernie','elizabeth', 'jordan', 'ken', 'charles', 'frank', 'hillary']:
+    for comp in competitions:
 
         print('Running on comp ' + comp)
-        dl = DataLoader()
-
+        
         if not test_run:
             dl.downloadLatest()
 

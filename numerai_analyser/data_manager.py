@@ -14,12 +14,24 @@ class NumeraiDataManager():
     user = ""
     download_loc = ""
     pred_file = "predictions.csv"
+    comps = None
 
     def __init__(self, key_loc = "api_key", download_loc = "datasets/"):
 
         self.readKey(key_loc)
         self.download_loc = download_loc
         self.connect()
+
+
+    def getCompetitions(self):
+
+        comps = self.api_conn.get_tournaments()
+
+        comps = [i['name'] for i in comps]
+
+        self.comps = comps
+
+        return(comps)
 
 
     def readKey(self, key_loc):
@@ -78,7 +90,7 @@ class DataLoader(NumeraiDataManager):
     def read(self, test = False):
 
         if test:
-            synthetic_data = SyntheticNumeraiData()
+            synthetic_data = SyntheticNumeraiData(comp = self.comps[0])
 
             self.train = synthetic_data.getTrainData()
             self.test = synthetic_data.getTestData()

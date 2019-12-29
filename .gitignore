@@ -1,3 +1,4 @@
 datasets/*
 api_key
 .temp/*
+dask-worker-space/*
