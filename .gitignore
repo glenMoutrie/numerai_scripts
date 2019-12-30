@@ -1,4 +1,14 @@
+# Datasets and api key
 datasets/*
 api_key
+
 .temp/*
 dask-worker-space/*
+
+# Venv
+bin/*
+lib/*
+pyvenv.cfg
+include/*
+
+__pycache__

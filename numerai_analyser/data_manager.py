@@ -4,8 +4,8 @@ import numerapi as nmapi
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import PolynomialFeatures
-from data_sets import *
-from synthetic_numerai_data import SyntheticNumeraiData
+from .data_sets import *
+from .synthetic_numerai_data import SyntheticNumeraiData
 
 class NumeraiDataManager():
 

@@ -19,7 +19,8 @@ class ClusterFeature:
 
 		# self.components = components
 		self.clusters = clusters
-		self.max_cluster = max_cluster
+		self.max_cluster = max_clusters
+		self.min_cluster = min_clusters
 
 		self.estimateCenters(data)
 		# self.reduceDimensions(data)

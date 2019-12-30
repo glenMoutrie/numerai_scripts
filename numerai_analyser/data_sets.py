@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import PolynomialFeatures
-from feature_selection import FeatureSelection
-from auto_cluster import ClusterFeature
+from .feature_selection import FeatureSelection
+from .auto_cluster import ClusterFeature
 
 """
 
@@ -19,9 +19,10 @@ class DataSet():
 
     test = False
 
-    def __init__(self, data, competition_type):
+    def __init__(self, data, competition_type, estimate_clusters = False):
 
         self.full_set = data
+        self.estimate_clusters = estimate_clusters
 
         # self.test = True
 
@@ -123,7 +124,15 @@ class DataSet():
             self.features += new_features
 
 
+"""
+TestSet
 
+The Test Set class provides all of the functionality that is unique to the test numerai set.
+
+A key feature is that any transformations that are made on the train set before modelling must
+also be made on the train set prior to estimation.
+
+"""
 class TestSet(DataSet):
 
     def __init__(self, data, competition_type, era_cat, numeric_features, cluster_model, clusters):
@@ -133,10 +142,11 @@ class TestSet(DataSet):
         self.numeric_features = numeric_features
         self.updateFeaturesList()
 
-        self.full_set["cluster"] = pd.Categorical(cluster_model.assignClusters(self.full_set[self.numeric_features]), categories = clusters)
+        if self.estimate_clusters:
+            self.full_set["cluster"] = pd.Categorical(cluster_model.assignClusters(self.full_set[self.numeric_features]), categories = clusters)
 
-        self.features += ["cluster"]
-        # self.category_features += ["cluster"]
+            self.features += ["cluster"]
+            # self.category_features += ["cluster"]
 
         self.eras = era_cat
         # Another gross hack with self.category_features[0]
@@ -159,6 +169,13 @@ class TestSet(DataSet):
 
         return self.full_set.loc[subset, self.y_col]
 
+"""
+Train Set
+
+This class has two key features. One is adding features that are used when testing models,
+a second is the ability to provide 
+
+"""
 class TrainSet(DataSet):
 
     split_index = {'train' : [], 'test' : []}
@@ -170,16 +187,25 @@ class TrainSet(DataSet):
         # self.reduceFeatureSpace(0.05)
         self.updateFeaturesList()
 
-        print("Estimating Clusters")
-        self.cluster_model = ClusterFeature(self.full_set[self.numeric_features], None)
+        if self.estimate_clusters:
 
-        cluster_id = self.cluster_model.assignClusters(self.full_set[self.numeric_features])
+            print("Estimating Clusters")
+            self.cluster_model = ClusterFeature(self.full_set[self.numeric_features], None)
 
-        self.clusters = np.unique(cluster_id)
+            cluster_id = self.cluster_model.assignClusters(self.full_set[self.numeric_features])
 
-        self.full_set["cluster"] = pd.Categorical(cluster_id, categories = self.clusters)
+            self.clusters = np.unique(cluster_id)
 
-        self.features += ["cluster"]
+            self.full_set["cluster"] = pd.Categorical(cluster_id, categories = self.clusters)
+
+            self.features += ["cluster"]
+
+        else:
+
+            self.cluster_model = None
+
+            self.clusters = None
+
 
         # A HACK THAT I NEED TO FIX (subset category features to get 0)
         self.eras = self.full_set[self.category_features].unique()
@@ -217,12 +243,6 @@ class TrainSet(DataSet):
             return pd.get_dummies(self.full_set[self.features].iloc[self.split_index["train"]])
         else:
             return pd.get_dummies(self.full_set[self.features].iloc[self.split_index["test"]])
-
-
-class FeatureGenerator():
-
-    def __init__(self, degree = 2, cluster = False):
-        self.poly = PolynomialFeatures(degree, include_bias = False)
 
 
 

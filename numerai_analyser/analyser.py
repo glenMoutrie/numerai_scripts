@@ -1,7 +1,7 @@
 #!numerai/bin/python
 import pandas as pd
-from data_manager import *
-from model_automation import *
+from .data_manager import *
+from .model_automation import *
 
 
 # Plan:
@@ -18,6 +18,7 @@ from model_automation import *
 # 8) Fix the cross terms issue by removing white space in names
 # 9) Potentially try a deep learning approach...
 # 10) Try an ensemble approach accross different epochs
+# 11) Improve unit tests and logging
 
 
 def predictNumerai(test_run = False):
