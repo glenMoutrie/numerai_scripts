@@ -90,7 +90,7 @@ class DataLoader(NumeraiDataManager):
     def read(self, test = False):
 
         if test:
-            synthetic_data = SyntheticNumeraiData(comp = self.comps[0])
+            synthetic_data = SyntheticNumeraiData(comp = self.comps)
 
             self.train = synthetic_data.getTrainData()
             self.test = synthetic_data.getTestData()

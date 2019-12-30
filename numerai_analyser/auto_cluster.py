@@ -15,11 +15,11 @@ client = Client(processes = False, threads_per_worker = 16, n_workers = 1)
 
 class ClusterFeature:
 
-	def __init__(self, data, clusters = None, max_clusters = 10, components = 4):
+	def __init__(self, data, clusters = None, min_clusters = 5, max_clusters = 6, components = 4):
 
 		# self.components = components
 		self.clusters = clusters
-		self.max_cluster = 6
+		self.max_cluster = max_cluster
 
 		self.estimateCenters(data)
 		# self.reduceDimensions(data)
@@ -50,10 +50,10 @@ class ClusterFeature:
 
 		if self.clusters is None:
 
-			# with joblib.parallel_backend('dask'):
-			if True:
+			with joblib.parallel_backend('dask'):
+			# if True: # catch to undo parallelsation if needed for debugging
 
-				self.models = [KMeans(n_clusters = i) for i in range(2, self.max_cluster + 1)]
+				self.models = [KMeans(n_clusters = i) for i in range(self.min_cluster, self.max_cluster + 1)]
 
 				# pool = mp.Pool()
 				self.models = list(map(lambda x: x.fit(data), self.models))

@@ -73,19 +73,19 @@ def predictNumerai(test_run = False):
         results_df[results_col].loc[results_df[results_col] > 0.7] = 0.7
         results_df[results_col].loc[results_df[results_col] < 0.3] = 0.3
 
-        dl.write(results_df)
-
         if not test_run:
+
+            dl.write(results_df)
             dl.uploadResults(comp)
 
-        try:
-            dl.getSubmissionStatus()
-        except ValueError as error:
-            print("Caught error in upload for " + comp)
-            print(error)
+            try:
+                dl.getSubmissionStatus()
+            except ValueError as error:
+                print("Caught error in upload for " + comp)
+                print(error)
 
         print("Complete.")
 
 if __name__ == '__main__':
-    predictNumerai(True)
+    predictNumerai(False)
 
