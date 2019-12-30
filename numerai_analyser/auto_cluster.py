@@ -1,6 +1,13 @@
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 import pandas as pd
+import numpy as np
+
+import joblib
+from dask.distributed import Client, progress
+
+client = Client(processes = False, threads_per_worker = 16, n_workers = 1)
+# import multiprocessing as mp
 
 # 1) Reduce dimensions - maybe add this later seems a little overkill
 # 2) Cluster based on test data
@@ -8,11 +15,12 @@ import pandas as pd
 
 class ClusterFeature:
 
-	def __init__(self, data, clusters = None, max_clusters = 10, components = 4):
+	def __init__(self, data, clusters = None, min_clusters = 5, max_clusters = 6, components = 4):
 
 		# self.components = components
 		self.clusters = clusters
-		self.max_cluster = 6
+		self.max_cluster = max_clusters
+		self.min_cluster = min_clusters
 
 		self.estimateCenters(data)
 		# self.reduceDimensions(data)
@@ -42,25 +50,31 @@ class ClusterFeature:
 	def estimateCenters(self, data):
 
 		if self.clusters is None:
-			self.models = [KMeans(n_clusters = i) for i in range(2, self.max_cluster + 1)]
-			self.models = list(map(lambda x: x.fit(data), self.models))
 
-			n = len(self.models) - 1
+			with joblib.parallel_backend('dask'):
+			# if True: # catch to undo parallelsation if needed for debugging
 
-			self.sse = list(map(lambda x: x.inertia_, self.models))
-			line = list(self.range_d(self.sse[0], self.sse[n], (self.sse[0] - self.sse[n])/n))
+				self.models = [KMeans(n_clusters = i) for i in range(self.min_cluster, self.max_cluster + 1)]
 
-			# print(self.sse)
-			# print(line)
-			dist_line = list(map(lambda x: x[1] - x[0], zip(self.sse, line)))
-			# print(dist_line)
+				# pool = mp.Pool()
+				self.models = list(map(lambda x: x.fit(data), self.models))
 
-			edge = max(dist_line)
-			self.best = [i for i, j in enumerate(dist_line) if j == edge]
+				n = len(self.models) - 1
 
-			# print(self.best)
+				self.sse = list(map(lambda x: x.inertia_, self.models))
+				line = list(self.range_d(self.sse[0], self.sse[n], (self.sse[0] - self.sse[n])/n))
 
-			self.cluster_model = self.models[self.best[0]]
+				# print(self.sse)
+				# print(line)
+				dist_line = list(map(lambda x: x[1] - x[0], zip(self.sse, line)))
+				# print(dist_line)
+
+				edge = max(dist_line)
+				self.best = [i for i, j in enumerate(dist_line) if j == edge]
+
+				# print(self.best)
+
+				self.cluster_model = self.models[self.best[0]]
 
 
 
@@ -92,6 +106,8 @@ if __name__ == "__main__":
 	cluster = ClusterFeature(test_data, None)
 
 	print(cluster.assignClusters(new_data))
+	print(np.unique(cluster.assignClusters(new_data)))
+
 
 	print(cluster.range_d(5.1,3.5,0.2))
 

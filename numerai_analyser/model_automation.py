@@ -55,14 +55,17 @@ class ModelTester():
         if verbose:
             print("Testing " + name , end = "")
 
-        model.fit(data.getX(True), data.getY(True))
+        # print(data.getX(True))
+
+        model.fit(data.getX(True), data.getY(True).round())
 
         y_prediction = model.predict_proba(data.getX(False))
 
         results = y_prediction[:, 1]
 
         duration = time.time() - t1
-        log_loss = metrics.log_loss(data.getY(False), results)
+
+        log_loss = metrics.log_loss(data.getY(False).round(), results)
 
         if verbose:
             print("Time taken: " + str(duration) + " Log loss: " + str(log_loss))
@@ -83,6 +86,10 @@ class ModelTester():
 
         model = self.getBestModel()
 
-        model.fit(train_data.getX(), train_data.getY())
+        model.fit(train_data.getX(), train_data.getY().round())
 
-        return model.predict_proba(test_data.getX())[:,1]
+        output =  model.predict_proba(test_data.getX())[:,1]
+
+        # print("Test Log Loss: " + str(metrics.log_loss(test_data.getY("test"), model.predict_proba(test_data.getX("test"))[:,1])))
+
+        return output

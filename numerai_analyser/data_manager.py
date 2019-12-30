@@ -4,7 +4,9 @@ import numerapi as nmapi
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import PolynomialFeatures
-from data_sets import *
+from .data_sets import *
+from .synthetic_numerai_data import SyntheticNumeraiData
+from .test_type import TestType
 
 class NumeraiDataManager():
 
@@ -13,12 +15,24 @@ class NumeraiDataManager():
     user = ""
     download_loc = ""
     pred_file = "predictions.csv"
+    comps = None
 
     def __init__(self, key_loc = "api_key", download_loc = "datasets/"):
 
         self.readKey(key_loc)
         self.download_loc = download_loc
         self.connect()
+
+
+    def getCompetitions(self):
+
+        comps = self.api_conn.get_tournaments()
+
+        comps = [i['name'] for i in comps]
+
+        self.comps = comps
+
+        return(comps)
 
 
     def readKey(self, key_loc):
@@ -40,6 +54,9 @@ class NumeraiDataManager():
     def downloadLatest(self):
 
         round_num = self.api_conn.get_current_round()
+        # Hack as api appears to have broken...
+        # round_num = 148
+
         self.sub_folder = "numerai_dataset_" + str(round_num)
 
         if not self.sub_folder in os.listdir(self.download_loc):
@@ -51,7 +68,7 @@ class NumeraiDataManager():
 
         # The api put the folder in a sub dir. Solustion left here, need to check on this later...
         if round_num == 131:
-        	self.sub_folder += "numerai_datasets/"
+            self.sub_folder += "numerai_datasets/"
 
     def uploadResults(self, name):
 
@@ -71,20 +88,40 @@ class DataLoader(NumeraiDataManager):
     test_data_file = 'numerai_tournament_data.csv'
 
 
-    def read(self):
-        self.train = pd.read_csv(self.download_loc + self.sub_folder + self.training_data_file, header = 0)
-        self.test = pd.read_csv(self.download_loc + self.sub_folder + self.test_data_file, header = 0)
+    def read(self, test = False, test_type = TestType.SYNTHETIC_DATA, subset_size = 100):
 
+        if test and test_type is TestType.SYNTHETIC_DATA:
+            synthetic_data = SyntheticNumeraiData(comp = self.comps)
+
+            self.train = synthetic_data.getTrainData()
+            self.test = synthetic_data.getTestData()
+
+        else:
+
+            self.train = pd.read_csv(self.download_loc + self.sub_folder + self.training_data_file, header = 0)
+            self.test = pd.read_csv(self.download_loc + self.sub_folder + self.test_data_file, header = 0)
+
+            if test_type is TestType.SUBSET_DATA:
+
+                self.train = subsetDataForTesting(self.train, subset_size)
+                self.test = subsetDataForTesting(self.test, subset_size)
+
+
+        
     def write(self, output):
         output.to_csv(self.download_loc + self.sub_folder + self.pred_file, index = False)
 
     def getData(self, competition_type):
         self.train = TrainSet(self.train, competition_type)
-        self.test = TestSet(self.test, competition_type, self.train.getEras(), self.train.numeric_features)
+        self.test = TestSet(self.test, competition_type, self.train.getEras(), self.train.numeric_features, self.train.cluster_model,  self.train.clusters)
 
         return self.train, self.test
         
+def subsetDataForTesting(data, era_len = 100):
 
+    era_len -= 1
+
+    return(pd.concat([data.loc[data.era == era][0:era_len] for era in data.era.unique()]))
 
 if __name__ == "__main__":
     dl = DataLoader()

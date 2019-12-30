@@ -1,8 +1,16 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import PolynomialFeatures
-from feature_selection import FeatureSelection
+from .feature_selection import FeatureSelection
+from .auto_cluster import ClusterFeature
 
+"""
+
+This module provides the structure for all data set classes. 
+
+The parent class DataSet contains all of the feature mapping that both the training set and test set need to perform.
+
+"""
 class DataSet():
 
     full_set = np.ndarray(None)
@@ -11,9 +19,10 @@ class DataSet():
 
     test = False
 
-    def __init__(self, data, competition_type):
+    def __init__(self, data, competition_type, estimate_clusters = False):
 
         self.full_set = data
+        self.estimate_clusters = estimate_clusters
 
         # self.test = True
 
@@ -115,21 +124,58 @@ class DataSet():
             self.features += new_features
 
 
+"""
+TestSet
 
+The Test Set class provides all of the functionality that is unique to the test numerai set.
+
+A key feature is that any transformations that are made on the train set before modelling must
+also be made on the train set prior to estimation.
+
+"""
 class TestSet(DataSet):
 
-    def __init__(self, data, competition_type, era_cat, numeric_features):
+    def __init__(self, data, competition_type, era_cat, numeric_features, cluster_model, clusters):
 
         super(TestSet, self).__init__(data, competition_type)
 
         self.numeric_features = numeric_features
+        self.updateFeaturesList()
+
+        if self.estimate_clusters:
+            self.full_set["cluster"] = pd.Categorical(cluster_model.assignClusters(self.full_set[self.numeric_features]), categories = clusters)
+
+            self.features += ["cluster"]
+            # self.category_features += ["cluster"]
 
         self.eras = era_cat
         # Another gross hack with self.category_features[0]
-        self.full_set[self.category_features] = pd.Categorical(self.full_set[self.category_features], 
-            ordered = True, categories = era_cat)
+        self.full_set[self.category_features] = pd.Categorical(self.full_set[self.category_features], ordered = True, categories = era_cat)
+    
+    def getX(self, data_type = None):
 
+        if data_type is None:
+            subset = [True] * self.full_set.shape[0]
+        else:
+            subset = self.full_set["data_type"] == data_type
 
+        return pd.get_dummies(self.full_set.loc[subset, self.features])
+
+    def getY(self, data_type = None):
+        if data_type is None:
+            subset = [True] * self.full_set.shape[0]
+        else:
+            subset = self.full_set["data_type"] == data_type
+
+        return self.full_set.loc[subset, self.y_col]
+
+"""
+Train Set
+
+This class has two key features. One is adding features that are used when testing models,
+a second is the ability to provide 
+
+"""
 class TrainSet(DataSet):
 
     split_index = {'train' : [], 'test' : []}
@@ -138,8 +184,28 @@ class TrainSet(DataSet):
 
         super(TrainSet, self).__init__(data, competition_type)
 
+        # self.reduceFeatureSpace(0.05)
+        self.updateFeaturesList()
 
-        self.reduceFeatureSpace(0.05)
+        if self.estimate_clusters:
+
+            print("Estimating Clusters")
+            self.cluster_model = ClusterFeature(self.full_set[self.numeric_features], None)
+
+            cluster_id = self.cluster_model.assignClusters(self.full_set[self.numeric_features])
+
+            self.clusters = np.unique(cluster_id)
+
+            self.full_set["cluster"] = pd.Categorical(cluster_id, categories = self.clusters)
+
+            self.features += ["cluster"]
+
+        else:
+
+            self.cluster_model = None
+
+            self.clusters = None
+
 
         # A HACK THAT I NEED TO FIX (subset category features to get 0)
         self.eras = self.full_set[self.category_features].unique()
@@ -179,40 +245,11 @@ class TrainSet(DataSet):
             return pd.get_dummies(self.full_set[self.features].iloc[self.split_index["test"]])
 
 
-class FeatureGenerator():
+def subsetDataForTesting(data, era_len = 100):
 
-    def __init__(self, degree = 2, cluster = False):
-        self.poly = PolynomialFeatures(degree, include_bias = False)
+    era_len -= 1
 
-
-
-
-# class NumeraiCompetitionSet():
-
-#     def __init__(self, data, competition_type):
-#         self.train = TrainSet(data, competition_type)
-#         self.test = TestSet(data, competition_type, train.getEras(), train.numeric_features)
-
-#     def setPolynomial(self, degree = 2):
-#         self.poly = PolynomialFeatures(degree, include_bias = False)
-
-
-
-
-    # def generatePolynomialFeatures(self, poly_degree = 2):
-    #     self.poly = PolynomialFeatures(degree = poly_degree, include_bias = False)
-
-    #     output = self.poly.fit_transform(self.x_full)
-
-    #     self.x_full = pd.DataFrame(output, columns = self.poly.get_feature_names(self.x_full.columns))
-
-    #     self.updateSplit(self.split_index['train'], self.split_index['test'])
-
-    # def setPolynomialFeatures(self):
-
-    #     output = self.poly.fit_transform(self.full_set[self.features])
-
-    #     return(pd.DataFrame(output, columns = poly.get_feature_names(self.x_full.columns)))
+    return(pd.concat([data.loc[data.era == era][0:era_len] for era in data.era.unique()]))
 
 if __name__ == "__main__":
 
