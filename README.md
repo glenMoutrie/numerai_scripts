@@ -1,11 +1,33 @@
-# Numer.ai analyser
+# numerai_analyser
 
-This is a small repo to store the scripts for Numer.ai competitions. 
+This package automates the weekly competitions on [numer.ai](https://numer.ai/).
 
-I didn't intend to build this out too heavily, but as I have added features it made sense to build them out in a class structure, this is now becoming large enough to merit a package.
+## Getting Started
 
-There are a range of procedures in here, but in summary running analyser.py will run the whole process. It will look for an api_key file in the same directory and download the latest data set.
+```
+python run.py
+```
 
-Once all of the data is downloaded and cleaned the features are automatically selected and a range of models are tested. For feature selection boomspikeslab in R is used (there isn't an obvious python equivalent), this is called from feature_selection.py.
+## Summary
 
-Finally the results are pushed out to numerai upon once the best model has been selected.
+The package uses [numerapi](https://github.com/uuazed/numerapi) to download the latest competition data, then tests a range of applicable models and features before automatically uploading the predictions from the best model.
+
+## Authoers
+* **Glen Moutrie**
+
+
+## Plan:
+* 1) create a data loader that creates a NumeraiData class -- DONE
+* 2) Define a NumeraiData Class with features, x data and y data -- DONE
+* 3) finish the model tester that returns the model results, estimating in parallel using multiprocessing
+* 4) automate with numerapi and other such tools -- DONE
+* 5) Better predictive models, look at alternaitves, betters model specifications
+* 6) Automatic feature selection --DONE
+* 7) Feature engineering (look at clustering etc)
+* 7 a) Clustering -- DONE
+*   b) Add principal components
+*   c) Add predictions from other models
+* 8) Fix the cross terms issue by removing white space in names
+* 9) Potentially try a deep learning approach...
+* 10) Try an ensemble approach accross different epochs
+* 11) Improve unit tests and logging
