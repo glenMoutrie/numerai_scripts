@@ -3,6 +3,8 @@ datasets/*
 api_key
 
 .temp/*
+.DS_Store
+*.swp
 dask-worker-space/*
 
 # Venv
