@@ -1,7 +1,9 @@
 #!numerai/bin/python
 import pandas as pd
+
 from .data_manager import *
 from .model_automation import *
+from .test_type import TestType
 
 
 # Plan:
@@ -21,7 +23,7 @@ from .model_automation import *
 # 11) Improve unit tests and logging
 
 
-def predictNumerai(test_run = False):
+def predictNumerai(test_run = False, test_type = TestType.SYNTHETIC_DATA, test_size = 100):
 
     dl = DataLoader()
 
@@ -31,34 +33,42 @@ def predictNumerai(test_run = False):
 
     print(competitions)
 
-    # for comp in ['frank', 'hillary']:
-    # for comp in ['bernie','elizabeth', 'jordan', 'ken', 'charles', 'frank', 'hillary']:
+    if test_run:
+        out = '(Test Run): '
+
+        if test_type is TestType.SYNTHETIC_DATA:
+            out += 'synthetic data test'
+        elif test_type is TestType.SUBSET_DATA:
+            out += 'subset data test'
+
+        print(out)
+
     for comp in competitions:
 
         print('Running on comp ' + comp)
         
-        if not test_run:
+        if not test_run or test_type is TestType.SUBSET_DATA:
             dl.downloadLatest()
 
-        dl.read(test_run)
+        dl.read(test_run, test_type, test_size)
 
         os.environ["OMP_NUM_THREADS"] = "8"
 
         train, test = dl.getData(comp)
+
         # train.generatePolynomialFeatures()
         # print(test)
         # test = train.setPolynomialFeatures(test)
     
-
         models = {
-    # 'logistic' : linear_model.LogisticRegression(),
-    #               'naiveBayes' : naive_bayes.GaussianNB(),
-    #               'randomForest' : ensemble.RandomForestClassifier(),
-    #               'extraTrees' : ensemble.ExtraTreesClassifier(),
-    #               'gradientBoosting' : ensemble.GradientBoostingClassifier(),
-                  'xgboost' : XGBClassifier()
-                  # 'adaBoost' : ensemble.AdaBoostClassifier()
-                  }
+        # 'logistic' : linear_model.LogisticRegression(),
+        'naiveBayes' : naive_bayes.GaussianNB(),
+        'randomForest' : ensemble.RandomForestClassifier(),
+        'extraTrees' : ensemble.ExtraTreesClassifier(),
+        'gradientBoosting' : ensemble.GradientBoostingClassifier(),
+        'xgboost' : XGBClassifier(),
+        'adaBoost' : ensemble.AdaBoostClassifier()
+        }
 
         tester = ModelTester(models, 1, 0.25)
 
@@ -87,6 +97,4 @@ def predictNumerai(test_run = False):
 
         print("Complete.")
 
-if __name__ == '__main__':
-    predictNumerai(False)
 

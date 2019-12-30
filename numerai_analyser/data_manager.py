@@ -6,6 +6,7 @@ import numpy as np
 from sklearn.preprocessing import PolynomialFeatures
 from .data_sets import *
 from .synthetic_numerai_data import SyntheticNumeraiData
+from .test_type import TestType
 
 class NumeraiDataManager():
 
@@ -87,9 +88,9 @@ class DataLoader(NumeraiDataManager):
     test_data_file = 'numerai_tournament_data.csv'
 
 
-    def read(self, test = False):
+    def read(self, test = False, test_type = TestType.SYNTHETIC_DATA, subset_size = 100):
 
-        if test:
+        if test and test_type is TestType.SYNTHETIC_DATA:
             synthetic_data = SyntheticNumeraiData(comp = self.comps)
 
             self.train = synthetic_data.getTrainData()
@@ -99,6 +100,11 @@ class DataLoader(NumeraiDataManager):
 
             self.train = pd.read_csv(self.download_loc + self.sub_folder + self.training_data_file, header = 0)
             self.test = pd.read_csv(self.download_loc + self.sub_folder + self.test_data_file, header = 0)
+
+            if test_type is TestType.SUBSET_DATA:
+
+                self.train = subsetDataForTesting(self.train, subset_size)
+                self.test = subsetDataForTesting(self.test, subset_size)
 
 
         
@@ -111,7 +117,11 @@ class DataLoader(NumeraiDataManager):
 
         return self.train, self.test
         
+def subsetDataForTesting(data, era_len = 100):
 
+    era_len -= 1
+
+    return(pd.concat([data.loc[data.era == era][0:era_len] for era in data.era.unique()]))
 
 if __name__ == "__main__":
     dl = DataLoader()

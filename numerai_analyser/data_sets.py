@@ -245,6 +245,11 @@ class TrainSet(DataSet):
             return pd.get_dummies(self.full_set[self.features].iloc[self.split_index["test"]])
 
 
+def subsetDataForTesting(data, era_len = 100):
+
+    era_len -= 1
+
+    return(pd.concat([data.loc[data.era == era][0:era_len] for era in data.era.unique()]))
 
 if __name__ == "__main__":
 
