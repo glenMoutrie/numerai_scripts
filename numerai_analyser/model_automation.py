@@ -57,7 +57,13 @@ class ModelTester():
 
         # print(data.getX(True))
 
-        model.fit(data.getX(True), data.getY(True).round())
+        if name in ['gradientBoosting', 'xgboost']:
+
+            model.fit(data.getX(True), data.getY(True))
+
+        else:
+
+            model.fit(data.getX(True), data.getY(True).round())
 
         y_prediction = model.predict_proba(data.getX(False))
 

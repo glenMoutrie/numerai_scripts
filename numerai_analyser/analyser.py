@@ -5,23 +5,22 @@ from .data_manager import *
 from .model_automation import *
 from .test_type import TestType
 
-
-# Plan:
-# 1) create a data loader that creates a NumeraiData class -- DONE
-# 2) Define a NumeraiData Class with features, x data and y data -- DONE
-# 3) finish the model tester that returns the model results, estimating in parallel using multiprocessing
-# 4) automate with numerapi and other such tools -- DONE
-# 5) Better predictive models, look at alternaitves, betters model specifications
-# 6) Automatic feature selection --DONE
-# 7) Feature engineering (look at clustering etc)
-# 7 a) Clustering -- DONE
-#   b) Add principal components
-#   c) Add predictions from other models
-# 8) Fix the cross terms issue by removing white space in names
-# 9) Potentially try a deep learning approach...
-# 10) Try an ensemble approach accross different epochs
-# 11) Improve unit tests and logging
-
+# Route map for model_improvements branch
+# 1) Improve logging so that you can assess improvement of implementation
+#       a) More measurements of predictive accuarcy
+#       b) Bench mark model run times
+#       c) Break down of era's with good/bad predictions
+#       d) Potentially consider implementing postgres db...
+#
+# 2) Model selection
+#       a) Create a better voting system for model selection, consider going for an ensemble approach
+#       b) This needs to rely somewhat on the architecture used for logging
+#       c) Better hyperparamter selection
+#       d) Maybe... maybe implement dnn...
+#
+# 3) Performance
+#       a) Better parallelisation using Dask for model estimation 
+#       b) multiprocessing/dask for different cuts of the data
 
 def predictNumerai(test_run = False, test_type = TestType.SYNTHETIC_DATA, test_size = 100):
 

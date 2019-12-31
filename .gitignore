@@ -14,3 +14,4 @@ pyvenv.cfg
 include/*
 
 __pycache__
+numerai_analyser/__pycache__
