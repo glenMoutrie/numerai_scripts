@@ -8,6 +8,15 @@ from .data_sets import *
 from .synthetic_numerai_data import SyntheticNumeraiData
 from .test_type import TestType
 
+
+"""
+
+Numerai Data Manager
+
+Manages the numerapi and returns the relevant data sets according to the request. Test cases are
+also requested if running a end-to-end test.
+
+"""
 class NumeraiDataManager():
 
     key = None

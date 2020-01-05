@@ -15,3 +15,6 @@ include/*
 
 __pycache__
 numerai_analyser/__pycache__
+
+#logs
+logs/model_performance/*

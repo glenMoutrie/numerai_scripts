@@ -60,7 +60,7 @@ def predictNumerai(test_run = False, test_type = TestType.SYNTHETIC_DATA, test_s
         # test = train.setPolynomialFeatures(test)
     
         models = {
-        # 'logistic' : linear_model.LogisticRegression(),
+        'logistic' : linear_model.LogisticRegression(),
         'naiveBayes' : naive_bayes.GaussianNB(),
         'randomForest' : ensemble.RandomForestClassifier(),
         'extraTrees' : ensemble.ExtraTreesClassifier(),
@@ -69,7 +69,7 @@ def predictNumerai(test_run = False, test_type = TestType.SYNTHETIC_DATA, test_s
         'adaBoost' : ensemble.AdaBoostClassifier()
         }
 
-        tester = ModelTester(models, 1, 0.25)
+        tester = ModelTester(models, 3, 0.25)
 
         tester.testAllSplits(train)
 

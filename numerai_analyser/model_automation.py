@@ -7,6 +7,7 @@ from sklearn.svm import LinearSVC
 from sklearn.pipeline import Pipeline
 from xgboost import XGBClassifier
 import time
+from datetime import datetime
 
 class ModelTester():
 
@@ -19,7 +20,16 @@ class ModelTester():
         self.splits_performed = 0
 
         self.ss = ShuffleSplit(n_splits = splits, test_size = test_size)
-        self.model_performance = pd.DataFrame(columns = list(self.models.keys()))
+
+        index = [(i, j) for i in range(1, splits + 1) for j in models.keys()]
+        index = pd.MultiIndex.from_tuples(index, names = ['split', 'model'])
+
+        self.measures =['duration', 'log_loss', 'precision', 'recall']
+
+        self.model_performance = pd.DataFrame(columns = self.measures, index = index)
+        print(self.model_performance)
+
+
         self.best_model = None
 
     def appendFeatureSelection(self):
@@ -32,12 +42,12 @@ class ModelTester():
 
         for train_i, test_i in self.ss.split(data.getX()):
 
+            print("\n\nTesting split: " + str(self.splits_performed))
+
             data.updateSplit(train_i, test_i)
             self.splits_performed += 1
 
             self.testAllModels(data,  self.models)
-
-            print("Splits tested: " + str(self.splits_performed))
 
 
 
@@ -45,7 +55,9 @@ class ModelTester():
 
         mp_update = {model: self.testModel(data, models.get(model), model) for model in models.keys()}
 
-        self.model_performance = self.model_performance.append(mp_update, ignore_index = True)
+
+        for update in mp_update.keys():
+            self.model_performance.loc[(self.splits_performed, update)] = mp_update[update]
 
 
     def testModel(self, data, model, name, verbose = True):
@@ -53,13 +65,18 @@ class ModelTester():
         t1 = time.time()
 
         if verbose:
-            print("Testing " + name , end = "")
+            print("Testing " + name + ":")
 
         # print(data.getX(True))
 
-        if name in ['gradientBoosting', 'xgboost']:
+        if name in ['xgboost']:
 
-            model.fit(data.getX(True), data.getY(True))
+            try:
+                model.fit(data.getX(True), data.getY(True))
+
+            except:
+                print(name + " failed")
+                return(np.nan)
 
         else:
 
@@ -73,20 +90,34 @@ class ModelTester():
 
         log_loss = metrics.log_loss(data.getY(False).round(), results)
 
-        if verbose:
-            print("Time taken: " + str(duration) + " Log loss: " + str(log_loss))
+        precision = metrics.precision_score(data.getY(False).round(), results.round())
 
-        return log_loss
+        recall = metrics.recall_score(data.getY(False).round(), results.round())
+
+        if verbose:
+            print("Time taken: " + str(duration) + 
+                "\nLog loss: " + str(log_loss) + 
+                "\nPrecision: " + str(precision) +
+                "\nRecall: " + str(recall))
+
+        return duration, log_loss, precision, recall
 
     def getBestModel(self):
 
-        print(self.model_performance.apply(np.mean))
-        print(self.model_performance.apply(np.mean).idxmin())
-        self.best_model = self.models[self.model_performance.apply(np.mean).idxmin()]
+        self.model_performance = self.model_performance.reset_index()
 
-        print("Best model: " + self.model_performance.apply(np.mean).idxmin() + "; Logistic Loss = "  + str(self.model_performance.apply(np.mean).min()))
+        self.best_model = self.model_performance\
+        .groupby('model')\
+        .apply(lambda x: x[self.measures[1:]].agg('mean'))\
+        .apply(lambda x: x.agg('rank'))\
+        .apply(lambda x: x.sum(), axis = 1)\
+        .idxmin()
 
-        return self.best_model
+        print("Best model: " + self.best_model)
+
+        self.logMetrics()
+
+        return self.models[self.best_model]
 
     def getBestPrediction(self, train_data, test_data):
 
@@ -99,3 +130,7 @@ class ModelTester():
         # print("Test Log Loss: " + str(metrics.log_loss(test_data.getY("test"), model.predict_proba(test_data.getX("test"))[:,1])))
 
         return output
+
+    def logMetrics(self):
+
+        self.model_performance.to_csv("logs/model_performance/metric_log_" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".csv")
