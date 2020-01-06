@@ -9,25 +9,32 @@ from xgboost import XGBClassifier
 import time
 from datetime import datetime
 
+# TODO: INCORPORATE ERAS INTO VALIDATION
 class ModelTester():
 
-    def __init__(self, models, splits = 5, test_size = 0.25) :
+    def __init__(self, models, eras, splits = 5, test_size = 0.25) :
 
         # self.appendFeatureSelection()
 
         self.models = models
+        self.eras = eras.tolist() + ['all']
 
         self.splits = splits
         self.splits_performed = 0
 
         self.ss = ShuffleSplit(n_splits = splits, test_size = test_size)
 
-        index = [(i, j, k) for i in range(1, splits + 1) for j in eras for k in models.keys()]
+        # index = [(i, j, k) for i in range(1, splits + 1) for j in self.eras for k in models.keys()]
+        # index = pd.MultiIndex.from_tuples(index, names = ['split', 'era', 'model'])
+
+        index = [(i, j) for i in range(1, splits + 1) for j in models.keys()]
         index = pd.MultiIndex.from_tuples(index, names = ['split', 'model'])
 
         self.measures =['duration', 'log_loss', 'precision', 'recall']
 
         self.model_performance = pd.DataFrame(columns = self.measures, index = index)
+
+        print(self.model_performance)
 
         self.best_model = None
 
@@ -59,6 +66,26 @@ class ModelTester():
             self.model_performance.loc[(self.splits_performed, update)] = mp_update[update]
 
 
+    def getMetrics(self,  observed, results, t1):
+
+        duration = time.time() - t1
+
+        log_loss = metrics.log_loss(observed.round(), results)
+
+        precision = metrics.precision_score(observed.round(), results.round())
+
+        recall = metrics.recall_score(observed.round(), results.round())
+
+        output = {'duration' : duration,
+        'log_loss': log_loss,
+        'precision': precision,
+        'recall': recall}
+
+        return output
+
+
+
+
     def testModel(self, data, model, name, verbose = True):
 
         t1 = time.time()
@@ -85,27 +112,23 @@ class ModelTester():
 
         results = y_prediction[:, 1]
 
-        duration = time.time() - t1
-
-        log_loss = metrics.log_loss(data.getY(False).round(), results)
-
-        precision = metrics.precision_score(data.getY(False).round(), results.round())
-
-        recall = metrics.recall_score(data.getY(False).round(), results.round())
+        all_metrics = self.getMetrics(data.getY(False),  results, t1)
 
         if verbose:
-            print("Time taken: " + str(duration) + 
-                "\nLog loss: " + str(log_loss) + 
-                "\nPrecision: " + str(precision) +
-                "\nRecall: " + str(recall))
+            print("Time taken: " + str(all_metrics['duration']) + 
+                "\nLog loss: " + str(all_metrics['log_loss']) + 
+                "\nPrecision: " + str(all_metrics['precision']) +
+                "\nRecall: " + str(all_metrics['recall']))
 
-        return duration, log_loss, precision, recall
+        return all_metrics
 
     def getBestModel(self):
 
-        self.best_model = 'xgboost'
+        # self.best_model = 'xgboost'
 
-        return self.models['xgboost']
+        # return self.models['xgboost']
+
+        print(self.model_performance)
 
         self.model_performance = self.model_performance.reset_index()
 

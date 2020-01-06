@@ -47,6 +47,8 @@ class DataSet(ABC):
 
         self.N = data.shape[0]
 
+        self.full_index = [i for i in range(0,self.N)]
+
     def reduceFeatureSpace(self, min_include):
 
         print("Reducing Feature Space\nInitial feature set:")
@@ -159,20 +161,27 @@ class TestSet(DataSet):
         # Another gross hack with self.category_features[0]
         self.full_set[self.category_features] = pd.Categorical(self.full_set[self.category_features], ordered = True, categories = era_cat)
     
-    def getX(self, data_type = None):
+    def getX(self, data_type = None, era = None):
 
         if data_type is None:
             subset = [True] * self.full_set.shape[0]
         else:
             subset = self.full_set["data_type"] == data_type
+
+        if era is not None:
+            subset = subset & self.full_set == era
 
         return pd.get_dummies(self.full_set.loc[subset, self.features])
 
-    def getY(self, data_type = None):
+    def getY(self, data_type = None, era = None):
+
         if data_type is None:
             subset = [True] * self.full_set.shape[0]
         else:
             subset = self.full_set["data_type"] == data_type
+
+        if era is not None:
+            subset = subset & self.full_set == era
 
         return self.full_set.loc[subset, self.y_col]
 
@@ -219,33 +228,55 @@ class TrainSet(DataSet):
         self.full_set[self.category_features] = pd.Categorical(self.full_set[self.category_features],
             ordered = True, categories = self.eras)
 
-        self.split_index = {'train' : [i for i in range(0,self.N)], 'test' : []}
+        # Default value for the split index, this should be updated later externally
+        self.split_index = {'train' : self.full_index, 'test' : []}
 
 
     def updateSplit(self, train_ind, test_ind):
 
         self.split_index = {'train' : train_ind, 'test' : test_ind}
 
-    def getY(self, train = None):
+    def getY(self, train = None, era = None):
 
-        if train is None:
+        index = self.full_index
 
-            return self.full_set[self.y_col]
+        print(train)
+        print(era)
 
-        elif train:
-            return self.full_set[self.y_col].iloc[self.split_index["train"]]
-        else:
-            return self.full_set[self.y_col].iloc[self.split_index["test"]]
+        if train is not None:
+            if train:
 
-    def getX(self, train = None):
+                index = np.intersect1d(index, self.split_index["train"])
 
-        if train is None:
-            return pd.get_dummies(self.full_set[self.features])
+            else:
 
-        elif train:
-            return pd.get_dummies(self.full_set[self.features].iloc[self.split_index["train"]])
-        else:
-            return pd.get_dummies(self.full_set[self.features].iloc[self.split_index["test"]])
+                index = np.intersect1d(index, self.split_index["test"])
+
+        if era is not None:
+
+            index = np.intersect1d(index, np.argwhere(self.full_set.era == era))
+
+        return self.full_set[self.y_col].iloc[index]
+
+    def getX(self, train = None, era = None):
+
+        index = self.full_index
+
+        if train is not None:
+
+            if train:
+
+                index = np.intersect1d(index, self.split_index["train"])
+
+            else:
+
+                index = np.intersect1d(index, self.split_index["test"])
+
+        if era is not None:
+
+            index = np.intersect1d(index, np.argwhere(self.full_set.era == era))
+
+        return pd.get_dummies(self.full_set[self.features].iloc[index])
 
 
 def subsetDataForTesting(data, era_len = 100):
