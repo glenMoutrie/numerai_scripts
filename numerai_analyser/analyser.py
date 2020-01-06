@@ -17,6 +17,7 @@ from .test_type import TestType
 #       b) This needs to rely somewhat on the architecture used for logging
 #       c) Better hyperparamter selection
 #       d) Maybe... maybe implement dnn...
+#       e) incorporate boom spike slab without polynomial
 #
 # 3) Performance
 #       a) Better parallelisation using Dask for model estimation 
@@ -71,7 +72,7 @@ def predictNumerai(test_run = False, test_type = TestType.SYNTHETIC_DATA, test_s
 
         tester = ModelTester(models, 3, 0.25)
 
-        tester.testAllSplits(train)
+        # tester.testAllSplits(train)
 
         results = tester.getBestPrediction(train, test)
 
@@ -80,8 +81,8 @@ def predictNumerai(test_run = False, test_type = TestType.SYNTHETIC_DATA, test_s
         results_df = pd.DataFrame(data={results_col: results})
         results_df = pd.DataFrame(test.getID()).join(results_df)
 
-        results_df[results_col].loc[results_df[results_col] > 0.7] = 0.7
-        results_df[results_col].loc[results_df[results_col] < 0.3] = 0.3
+        # results_df[results_col].loc[results_df[results_col] > 0.7] = 0.7
+        # results_df[results_col].loc[results_df[results_col] < 0.3] = 0.3
 
         if not test_run:
 

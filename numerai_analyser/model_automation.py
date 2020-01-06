@@ -16,6 +16,7 @@ class ModelTester():
         # self.appendFeatureSelection()
 
         self.models = models
+
         self.splits = splits
         self.splits_performed = 0
 
@@ -27,8 +28,6 @@ class ModelTester():
         self.measures =['duration', 'log_loss', 'precision', 'recall']
 
         self.model_performance = pd.DataFrame(columns = self.measures, index = index)
-        print(self.model_performance)
-
 
         self.best_model = None
 
@@ -104,6 +103,10 @@ class ModelTester():
 
     def getBestModel(self):
 
+        self.best_model = 'xgboost'
+
+        return self.models['xgboost']
+
         self.model_performance = self.model_performance.reset_index()
 
         self.best_model = self.model_performance\
@@ -113,7 +116,7 @@ class ModelTester():
         .apply(lambda x: x.sum(), axis = 1)\
         .idxmin()
 
-        print("Best model: " + self.best_model)
+        print("\n\nBest model: " + self.best_model)
 
         self.logMetrics()
 
@@ -123,7 +126,13 @@ class ModelTester():
 
         model = self.getBestModel()
 
-        model.fit(train_data.getX(), train_data.getY().round())
+        if self.best_model in ['xgboost']:
+
+            model.fit(train_data.getX(), train_data.getY())
+
+        else:
+
+            model.fit(train_data.getX(), train_data.getY().round())
 
         output =  model.predict_proba(test_data.getX())[:,1]
 
