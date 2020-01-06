@@ -22,7 +22,7 @@ class ModelTester():
 
         self.ss = ShuffleSplit(n_splits = splits, test_size = test_size)
 
-        index = [(i, j) for i in range(1, splits + 1) for j in models.keys()]
+        index = [(i, j, k) for i in range(1, splits + 1) for j in eras for k in models.keys()]
         index = pd.MultiIndex.from_tuples(index, names = ['split', 'model'])
 
         self.measures =['duration', 'log_loss', 'precision', 'recall']

@@ -1,0 +1,7 @@
+README.md
+setup.py
+numerai_analyser.egg-info/PKG-INFO
+numerai_analyser.egg-info/SOURCES.txt
+numerai_analyser.egg-info/dependency_links.txt
+numerai_analyser.egg-info/requires.txt
+numerai_analyser.egg-info/top_level.txt

@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.preprocessing import PolynomialFeatures
 from .feature_selection import FeatureSelection
 from .auto_cluster import ClusterFeature
+from abc import ABC, abstractmethod
 
 """
 
@@ -11,7 +12,7 @@ This module provides the structure for all data set classes.
 The parent class DataSet contains all of the feature mapping that both the training set and test set need to perform.
 
 """
-class DataSet():
+class DataSet(ABC):
 
     full_set = np.ndarray(None)
 
@@ -72,11 +73,17 @@ class DataSet():
     def getID(self):
         return self.full_set["id"]
 
+    @abstractmethod
     def getX(self):
-        return pd.get_dummies(self.full_set[self.features])
+        pass
 
+    @abstractmethod
     def getY(self):
-        return self.full_set[self.y_col]
+        pass
+
+    def getEras(self):
+
+        return self.eras
 
     # TODO: fix poly for full_set
     def generatePolynomialFeatures(self, poly_degree = 2, interaction = False, log = True):
@@ -214,10 +221,6 @@ class TrainSet(DataSet):
 
         self.split_index = {'train' : [i for i in range(0,self.N)], 'test' : []}
 
-
-    def getEras(self):
-
-        return self.eras
 
     def updateSplit(self, train_ind, test_ind):
 
