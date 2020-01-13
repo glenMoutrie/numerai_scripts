@@ -100,7 +100,7 @@ class DataLoader(NumeraiDataManager):
     def read(self, test = False, test_type = TestType.SYNTHETIC_DATA, subset_size = 100):
 
         if test and test_type is TestType.SYNTHETIC_DATA:
-            synthetic_data = SyntheticNumeraiData(comp = self.comps)
+            synthetic_data = SyntheticNumeraiData(comp = self.comps, observations = subset_size)
 
             self.train = synthetic_data.getTrainData()
             self.test = synthetic_data.getTestData()

@@ -59,6 +59,11 @@ def predictNumerai(test_run = False, test_type = TestType.SYNTHETIC_DATA, test_s
         # train.generatePolynomialFeatures()
         # print(test)
         # test = train.setPolynomialFeatures(test)
+
+        if test_run:
+            n_est = 200
+        else:
+            n_est = 20000
     
         models = {
         'logistic' : linear_model.LogisticRegression(),
@@ -66,7 +71,8 @@ def predictNumerai(test_run = False, test_type = TestType.SYNTHETIC_DATA, test_s
         'randomForest' : ensemble.RandomForestClassifier(),
         'extraTrees' : ensemble.ExtraTreesClassifier(),
         'gradientBoosting' : ensemble.GradientBoostingClassifier(),
-        'xgboost' : XGBClassifier(),
+        'xgboost' : XGBClassifier(max_depth=5, learning_rate=0.01, n_estimators= n_est),
+        'xgboostReg' : XGBRegressor(max_depth=5, learning_rate=0.01, n_estimators= n_est),
         'adaBoost' : ensemble.AdaBoostClassifier()
         }
 

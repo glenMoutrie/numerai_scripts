@@ -286,7 +286,7 @@ def subsetDataForTesting(data, era_len = 100):
 
     era_len -= 1
 
-    return(pd.concat([data.loc[data.era == era][0:era_len] for era in data.era.unique()]))
+    return(pd.concat([data.iloc[np.random.shuffle(np.where(data.era == era))][0:era_len] for era in data.era.unique()]))
 
 if __name__ == "__main__":
 
