@@ -70,7 +70,7 @@ def predictNumerai(test_run = False, test_type = TestType.SYNTHETIC_DATA, test_s
         'adaBoost' : ensemble.AdaBoostClassifier()
         }
 
-        tester = ModelTester(models, train.getEras(), 3, 0.25)
+        tester = ModelTester(models, train.getEras(), 1, 0.25)
 
         tester.testAllSplits(train)
 

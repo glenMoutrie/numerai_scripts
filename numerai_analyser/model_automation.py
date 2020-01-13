@@ -24,13 +24,13 @@ class ModelTester():
 
         self.ss = ShuffleSplit(n_splits = splits, test_size = test_size)
 
-        # index = [(i, j, k) for i in range(1, splits + 1) for j in self.eras for k in models.keys()]
-        # index = pd.MultiIndex.from_tuples(index, names = ['split', 'era', 'model'])
+        index = [(i, j, k) for i in range(1, splits + 1) for j in self.eras for k in models.keys()]
+        index = pd.MultiIndex.from_tuples(index, names = ['split', 'era', 'model'])
 
-        index = [(i, j) for i in range(1, splits + 1) for j in models.keys()]
-        index = pd.MultiIndex.from_tuples(index, names = ['split', 'model'])
+        # index = [(i, j) for i in range(1, splits + 1) for j in models.keys()]
+        # index = pd.MultiIndex.from_tuples(index, names = ['split', 'model'])
 
-        self.measures =['duration', 'log_loss', 'precision', 'recall']
+        self.measures =['duration', 'log_loss', 'precision', 'recall', 'f1', 'auc']
 
         self.model_performance = pd.DataFrame(columns = self.measures, index = index)
 
@@ -40,7 +40,6 @@ class ModelTester():
 
     def appendFeatureSelection(self):
         for name, model in zip(self.models.keys(), self.models.values()):
-            print(model)
             self.models[name] = Pipeline([('feature selection', SelectFromModel(model))
                 ('model', model)])
 
@@ -63,28 +62,8 @@ class ModelTester():
 
 
         for update in mp_update.keys():
-            self.model_performance.loc[(self.splits_performed, update)] = mp_update[update]
-
-
-    def getMetrics(self,  observed, results, t1):
-
-        duration = time.time() - t1
-
-        log_loss = metrics.log_loss(observed.round(), results)
-
-        precision = metrics.precision_score(observed.round(), results.round())
-
-        recall = metrics.recall_score(observed.round(), results.round())
-
-        output = {'duration' : duration,
-        'log_loss': log_loss,
-        'precision': precision,
-        'recall': recall}
-
-        return output
-
-
-
+            for era in self.eras:
+                self.model_performance.loc[(self.splits_performed, era, update)] = mp_update[update][era]
 
     def testModel(self, data, model, name, verbose = True):
 
@@ -92,8 +71,6 @@ class ModelTester():
 
         if verbose:
             print("Testing " + name + ":")
-
-        # print(data.getX(True))
 
         if name in ['xgboost']:
 
@@ -112,7 +89,21 @@ class ModelTester():
 
         results = y_prediction[:, 1]
 
-        all_metrics = self.getMetrics(data.getY(False),  results, t1)
+        metrics = {}
+
+        for era in self.eras:
+
+
+            if era == 'all':
+                all_metrics = self.getMetrics(data.getY(False).to_numpy(),  results, t1)
+                metrics[era] = all_metrics
+
+            else:
+
+                ind = np.isin(data.split_index['test'], np.argwhere(data.getEraIndex(era).to_numpy()))
+
+                metrics[era] = self.getMetrics(data.getY(False, era).to_numpy(), results[ind], t1)
+                
 
         if verbose:
             print("Time taken: " + str(all_metrics['duration']) + 
@@ -120,7 +111,43 @@ class ModelTester():
                 "\nPrecision: " + str(all_metrics['precision']) +
                 "\nRecall: " + str(all_metrics['recall']))
 
-        return all_metrics
+        return metrics
+
+    def getMetrics(self,  observed, results, t1):
+
+
+        stop_metrics = observed.size <= 1
+
+        stop_metrics = stop_metrics or (np.unique(results).size <= 1)
+
+        stop_metrics = stop_metrics or (np.unique(observed).size <= 1)
+
+        if stop_metrics:
+            return(dict(zip(self.measures, [np.nan] * len(self.measures))))
+
+        duration = time.time() - t1
+
+        try:
+
+            log_loss = metrics.log_loss(observed.round(), results)
+
+            precision = metrics.precision_score(observed.round(), results.round())
+
+            recall = metrics.recall_score(observed.round(), results.round())
+
+            f1 = metrics.f1_score(observed.round(), results.round())
+
+            auc = metrics.roc_auc_score(observed.round(), results.round())
+
+        except UndefinedMetricWarning as undefined_metric:
+            pass
+
+        output = dict(zip(self.measures, [duration, log_loss, precision, recall, f1, auc]))
+
+
+        return output
+
+
 
     def getBestModel(self):
 
@@ -143,11 +170,11 @@ class ModelTester():
 
         self.logMetrics()
 
-        return self.models[self.best_model]
+        return self.best_model
 
     def getBestPrediction(self, train_data, test_data):
 
-        model = self.getBestModel()
+        model = self.models[self.getBestModel()]
 
         if self.best_model in ['xgboost']:
 

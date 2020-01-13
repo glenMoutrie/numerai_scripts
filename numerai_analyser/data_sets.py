@@ -75,6 +75,9 @@ class DataSet(ABC):
     def getID(self):
         return self.full_set["id"]
 
+    def getEraIndex(self, era):
+        return self.full_set.era == era
+
     @abstractmethod
     def getX(self):
         pass
@@ -240,9 +243,6 @@ class TrainSet(DataSet):
 
         index = self.full_index
 
-        print(train)
-        print(era)
-
         if train is not None:
             if train:
 
@@ -254,11 +254,14 @@ class TrainSet(DataSet):
 
         if era is not None:
 
-            index = np.intersect1d(index, np.argwhere(self.full_set.era == era))
+            # The below needs to be to_numpy otherwise you get a deprecated warning
+            # Series.nonzero() is deprecated and will be removed in a future version.Use Series.to_numpy().nonzero() 
+            index = np.intersect1d(index, np.argwhere(self.full_set.era.to_numpy() == era))
 
         return self.full_set[self.y_col].iloc[index]
 
     def getX(self, train = None, era = None):
+
 
         index = self.full_index
 
