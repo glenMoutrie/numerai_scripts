@@ -23,7 +23,7 @@ class ModelTester():
 
         self.ss = ShuffleSplit(n_splits = splits, test_size = test_size)
 
-        index = [(i, j, k) for i in range(1, splits + 1) for j in self.eras for k in models.keys()]
+        index = [(i, j, k) for i in range(1, splits + 1) for j in self.eras for k in (list(models.keys()) + ['ensemble'])]
         index = pd.MultiIndex.from_tuples(index, names = ['split', 'era', 'model'])
 
         self.measures =['duration', 'log_loss', 'corr', 'rsq', 'num_cov', 'precision', 'recall', 'f1', 'auc']
@@ -50,17 +50,75 @@ class ModelTester():
 
             self.testAllModels(data,  self.models)
 
-    def numeraiScore(self, train, test):
-        return(np.corrcoef(pd.Series(train).rank(pct = True, method = 'first'), test)[0,1])
+    def weightedAveragePreds(self, weights, predictions):
+
+        return predictions[weights.index.to_list()]\
+        .apply(lambda x: np.average(x, weights = weights), axis = 1)
+
+
+
+
+    def calculateEnsemblePredictions(self):
+
+        rank = self.model_performance\
+        .groupby('era')\
+        .apply(self.getModelRank)
+
+        viable = self.model_performance\
+        .groupby(['era', 'model'])\
+        .apply(lambda x: x.auc.min() >= 0.5 and x.rsq.min() > 0 and x.f1.min() > 0.5)\
+        .reset_index()
+
+        print(rank)
+        print(viable)
+        print(viable[viable == True].index.to_list())
+
+        for i in self.predictions.era.unique():
+
+            if viable[viable.era == i][0].any():
+                viable_ranks = rank.loc[i][viable.loc[(viable.era == i) & (viable[0])].model]
+                print(viable_ranks.index)
+                print(self.weightedAveragePreds(viable_ranks, self.predictions.loc[self.predictions.era == i]))
+                self.predictions.loc[self.predictions.era == i, 'ensemble'] = self.weightedAveragePreds(viable_ranks, self.predictions.loc[self.predictions.era == i])
+
+            else:
+                print('Best model: ' + str(rank.loc[i].idxmax(axis = 1)))
+                self.predictions.loc[self.predictions.era == i, 'ensemble'] = self.predictions.loc[self.predictions.era == i, rank.loc[i].idxmax(axis = 1)]
+                
+
+
+
+
 
     def testAllModels(self, data, models):
 
-        mp_update = {model: self.testModel(data, models.get(model), model) for model in models.keys()}
+        self.predictions = pd.DataFrame(columns = ['era'] + list(models.keys()) + ['ensemble'],
+            index = data.split_index['test'])
 
+        self.predictions['era'] = data.full_set.iloc[self.predictions.index].era
+
+        mp_update = {model: self.testModel(data, models.get(model), model) for model in models.keys()}
 
         for update in mp_update.keys():
             for era in self.eras:
                 self.model_performance.loc[(self.splits_performed, era, update)] = mp_update[update][era]
+
+        self.calculateEnsemblePredictions()
+
+        print(self.predictions)
+
+        for era in self.eras:
+
+            print(data.getY(False, era).to_numpy().shape)
+            print(self.predictions.loc[self.predictions.era == era, 'ensemble'].to_numpy().shape)
+
+            _metrics = self.getMetrics(observed = data.getY(False, era).to_numpy(), 
+                results = self.predictions.loc[self.predictions.era == era, 'ensemble'].to_numpy(), 
+                t1 = np.nan)
+
+            print(_metrics)
+
+            self.model_performance.loc[(self.splits_performed, era, 'ensemble')] = _metrics
 
     def testModel(self, data, model, name, verbose = True):
 
@@ -79,6 +137,8 @@ class ModelTester():
             model.fit(data.getX(True), data.getY(True).round())
             y_prediction = model.predict_proba(data.getX(False))
             results = y_prediction[:, 1]
+
+        self.predictions[name] = results
 
         metrics = {}
 
@@ -126,7 +186,13 @@ class ModelTester():
 
         corr = np.correlate(observed, results)[0]
 
-        num_cov = self.numeraiScore(observed, results)
+        try: 
+            num_cov = self.numeraiScore(results, observed)
+        
+        except Exception as error:
+            print(observed)
+            print(results)
+            raise(error)
 
         rsq = metrics.r2_score(observed, results)
 
@@ -145,11 +211,18 @@ class ModelTester():
         return output
 
 
+    def numeraiScore(self, train, test):
+        train = pd.Series(train, dtype = 'f').rank(pct = True, method = 'first').to_numpy()
+        print(train)
+        print(test)
+        return(np.corrcoef(train, test)[0,1])
+
+
 
     def getBestModel(self):
 
+        # The below code is sometimes used for forcing a model...
         # self.best_model = 'xgboost'
-
         # return self.models['xgboost']
 
         print(self.model_performance)
