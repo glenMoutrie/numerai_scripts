@@ -14,6 +14,8 @@ The parent class DataSet contains all of the feature mapping that both the train
 """
 class DataSet(ABC):
 
+    split_index = {'train' : [], 'test' : []}
+
     full_set = np.ndarray(None)
 
     poly = None
@@ -160,7 +162,7 @@ class TestSet(DataSet):
             self.features += ["cluster"]
             # self.category_features += ["cluster"]
 
-        self.eras = era_cat
+        self.eras = self.full_set.era.unique()
         # Another gross hack with self.category_features[0]
         self.full_set[self.category_features] = pd.Categorical(self.full_set[self.category_features], ordered = True, categories = era_cat)
     
@@ -196,8 +198,6 @@ a second is the ability to provide
 
 """
 class TrainSet(DataSet):
-
-    split_index = {'train' : [], 'test' : []}
 
     def __init__(self, data, competition_type):
 

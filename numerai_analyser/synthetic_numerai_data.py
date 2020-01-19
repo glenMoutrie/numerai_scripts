@@ -21,6 +21,7 @@ class SyntheticNumeraiData():
 		self.num_eras = num_eras
 
 		self.eras = ['era_' + str(round((i/(self.observations/num_eras)) - 0.5) + 1) for i in range(1, self.observations + 1)]
+		self.eras = list(map(lambda x: 'eraX' if x == 'era_1' else x, self.eras))
 
 		self.id = ['test_' + str(i) for i in range(1, self.observations + 1)]
 

@@ -21,6 +21,9 @@ class ModelTester():
         self.splits = splits
         self.splits_performed = 0
 
+        self.all_ranks = []
+        self.all_valid_checks = []
+
         self.ss = ShuffleSplit(n_splits = splits, test_size = test_size)
 
         index = [(i, j, k) for i in range(1, splits + 1) for j in self.eras for k in (list(models.keys()) + ['ensemble'])]
@@ -50,6 +53,12 @@ class ModelTester():
 
             self.testAllModels(data,  self.models)
 
+        self.all_ranks = pd.concat(self.all_ranks)
+        self.all_valid_checks = pd.concat(self.all_valid_checks)
+
+        print(self.all_ranks)
+        print(self.all_valid_checks)
+
     def weightedAveragePreds(self, weights, predictions):
 
         return predictions[weights.index.to_list()]\
@@ -60,30 +69,43 @@ class ModelTester():
 
     def calculateEnsemblePredictions(self):
 
+        index = self.model_performance.index.get_level_values('split') == self.splits_performed
+        index = index & (self.model_performance.index.get_level_values('model') != 'ensemble')
+
         rank = self.model_performance\
+        .loc[index]\
         .groupby('era')\
         .apply(self.getModelRank)
 
         viable = self.model_performance\
+        .loc[index]\
         .groupby(['era', 'model'])\
         .apply(lambda x: x.auc.min() >= 0.5 and x.rsq.min() > 0 and x.f1.min() > 0.5)\
+        .rename('viable')\
         .reset_index()
 
-        print(rank)
-        print(viable)
-        print(viable[viable == True].index.to_list())
+        self.all_ranks.append(rank)
+        self.all_valid_checks.append(viable)
 
-        for i in self.predictions.era.unique():
+        for i in rank.index.unique():
 
-            if viable[viable.era == i][0].any():
-                viable_ranks = rank.loc[i][viable.loc[(viable.era == i) & (viable[0])].model]
-                print(viable_ranks.index)
-                print(self.weightedAveragePreds(viable_ranks, self.predictions.loc[self.predictions.era == i]))
+            if viable[viable.era == i]['viable'].any():
+
+                viable_ranks = rank.loc[i][viable.loc[(viable.era == i) & (viable['viable'])].model]
                 self.predictions.loc[self.predictions.era == i, 'ensemble'] = self.weightedAveragePreds(viable_ranks, self.predictions.loc[self.predictions.era == i])
 
             else:
-                print('Best model: ' + str(rank.loc[i].idxmax(axis = 1)))
-                self.predictions.loc[self.predictions.era == i, 'ensemble'] = self.predictions.loc[self.predictions.era == i, rank.loc[i].idxmax(axis = 1)]
+
+                _best_model = rank.loc[i].idxmax(axis = 1)
+
+                if str(_best_model) == 'nan':
+
+                    _best_model = rank.loc['all'].idxmax(axis = 1)
+
+                self.predictions.loc[self.predictions.era == i, 'ensemble'] = self.predictions.loc[self.predictions.era == i, _best_model]
+
+        rank['split'] = self.splits_performed
+        viable['split'] = self.splits_performed
                 
 
 
@@ -95,7 +117,7 @@ class ModelTester():
         self.predictions = pd.DataFrame(columns = ['era'] + list(models.keys()) + ['ensemble'],
             index = data.split_index['test'])
 
-        self.predictions['era'] = data.full_set.iloc[self.predictions.index].era
+        self.predictions['era'] = data.full_set.iloc[data.split_index['test']].era.to_numpy()
 
         mp_update = {model: self.testModel(data, models.get(model), model) for model in models.keys()}
 
@@ -103,22 +125,31 @@ class ModelTester():
             for era in self.eras:
                 self.model_performance.loc[(self.splits_performed, era, update)] = mp_update[update][era]
 
+        print('Estimating ensemble predictions')
+
         self.calculateEnsemblePredictions()
 
-        print(self.predictions)
+        self.predictions.astype(dict(zip(list(models.keys()) + ['ensemble'], ['float64'])))
+
+        
 
         for era in self.eras:
 
-            print(data.getY(False, era).to_numpy().shape)
-            print(self.predictions.loc[self.predictions.era == era, 'ensemble'].to_numpy().shape)
+            if era == 'all':
+                
+                _metrics == self.getMetrics(observed = data.getY(False).to_numpy(),
+                    results = self.predictions['ensemble'].to_numpy(),
+                    t1 = np.nan)
 
-            _metrics = self.getMetrics(observed = data.getY(False, era).to_numpy(), 
+            else:
+
+                _metrics = self.getMetrics(observed = data.getY(False, era).to_numpy(), 
                 results = self.predictions.loc[self.predictions.era == era, 'ensemble'].to_numpy(), 
                 t1 = np.nan)
 
-            print(_metrics)
-
             self.model_performance.loc[(self.splits_performed, era, 'ensemble')] = _metrics
+
+    
 
     def testModel(self, data, model, name, verbose = True):
 
@@ -174,6 +205,8 @@ class ModelTester():
 
         stop_metrics = stop_metrics or (np.unique(observed).size <= 1)
 
+        stop_metrics = stop_metrics or (np.unique(observed.round()).size <= 1)
+
         stop_metrics = stop_metrics or (np.unique(binary_results).size <= 1)
 
         if stop_metrics:
@@ -186,13 +219,7 @@ class ModelTester():
 
         corr = np.correlate(observed, results)[0]
 
-        try: 
-            num_cov = self.numeraiScore(results, observed)
-        
-        except Exception as error:
-            print(observed)
-            print(results)
-            raise(error)
+        num_cov = self.numeraiScore(results, observed)
 
         rsq = metrics.r2_score(observed, results)
 
@@ -213,8 +240,6 @@ class ModelTester():
 
     def numeraiScore(self, train, test):
         train = pd.Series(train, dtype = 'f').rank(pct = True, method = 'first').to_numpy()
-        print(train)
-        print(test)
         return(np.corrcoef(train, test)[0,1])
 
 
@@ -253,16 +278,80 @@ class ModelTester():
         .apply(lambda x: x.mean(), axis = 1)
 
 
+    def ensemblePrediction(self, models, weights, train, test):
+
+        predictions = pd.DataFrame(columns = models, index = [i for i in range(test.N)])
+
+        for i in models:
+
+            model = self.models[i]
+
+            if i == 'xgboostReg':
+
+                model.fit(train.getX(), train.getY())
+                results = model.predict(test.getX())
+
+            else:
+
+                model.fit(train.getX(), train.getY().round())
+                y_prediction = model.predict_proba(test.getX())
+                results = y_prediction[:, 1]
+
+            predictions[i] = results
+
+        output = self.weightedAveragePreds(weights, predictions)
+
+
+        # index = not test.getY().isnull()
+        # print(self.getMetrics(output.loc[index], test.getY().loc[index], np.nan))
+
+        return(output)
+
+
+
+
+
     def getBestPrediction(self, train_data, test_data):
 
         name = self.getBestModel()
 
-        model = self.models[name]
+        if name == 'ensemble':
+
+            test_eras = test_data.full_set.era.unique()
+
+            erax_validity = self.all_valid_checks\
+            .astype({'viable':'int32'})\
+            .groupby('model')['viable']\
+            .agg('mean')\
+            .apply(lambda x: x >= 0.2)
+
+            valid_models = erax_validity[erax_validity].index
+
+            print(erax_validity)
+
+            if not erax_validity.any():
+
+                print("No valid models for EraX, reverting to xgboost")
+
+                name = 'xgboost'
+                model = self.models[name]
+
+            else:
+
+                model_weights = self.all_ranks.loc['eraX', list(valid_models)].agg('mean')
+
+        else:
+
+            model = self.models[name]
 
         if name == 'xgboostReg':
 
             model.fit(train_data.getX(), train_data.getY())
             output = model.predict(test_data.getX())
+
+        elif name == 'ensemble':
+
+            output = self.ensemblePrediction(valid_models, model_weights, train_data, test_data)
 
         else:
 
