@@ -9,6 +9,8 @@ class FeatureSelection:
         self.wd = os.getcwd()
         self.file_location = self.wd + "/.temp/num_data.csv"
         self.output_location = self.wd + "/.temp/output"
+        
+        self.original_features = features
 
 
         if not use_previous:
@@ -21,7 +23,7 @@ class FeatureSelection:
 
     def executeBayesianFeatureSelectionR(self):
         
-        command = "Rscript ../feature_select.R"
+        command = "Rscript r_scripts/feature_select.R"
         command += " " + self.file_location + " "
         command += " " + self.formula + " "
         command += " " + self.output_location
@@ -49,6 +51,13 @@ class FeatureSelection:
         self.formula = formula
 
     def selectBestFeatures(self,min_include, exclude_intercept = True):
+
+        if self.output.loc[0]['variable'] == "NA":
+
+            self.best_vars = self.original_features
+            return(self.best_vars)
+
+
         best_vars = list(self.output.loc[self.output['probability'] > min_include]['variable'])
 
         if len(best_vars) < 1:

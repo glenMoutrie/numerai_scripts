@@ -120,9 +120,9 @@ class DataLoader(NumeraiDataManager):
     def write(self, output):
         output.to_csv(self.download_loc + self.sub_folder + self.pred_file, index = False)
 
-    def getData(self, competition_type):
-        self.train = TrainSet(self.train, competition_type)
-        self.test = TestSet(self.test, competition_type, self.train.getEras(), self.train.numeric_features, self.train.cluster_model,  self.train.clusters)
+    def getData(self, competition_type, polynomial, reduce_features, test):
+        self.train = TrainSet(self.train, competition_type, polynomial, reduce_features, test)
+        self.test = TestSet(self.test, competition_type, self.train.getEras(), self.train.numeric_features, self.train.cluster_model,  self.train.clusters, polynomial)
 
         return self.train, self.test
         

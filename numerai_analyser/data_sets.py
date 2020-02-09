@@ -20,20 +20,12 @@ class DataSet(ABC):
 
     poly = None
 
-    test = False
-
-    def __init__(self, data, competition_type, estimate_clusters = False):
+    def __init__(self, data, competition_type, polynomial = False, estimate_clusters = False):
 
         self.full_set = data
         self.estimate_clusters = estimate_clusters
 
-        # self.test = True
-
         self.numeric_features = [f for f in list(self.full_set) if "feature" in f]
-
-        # Test just the first four features
-        if self.test:
-            self.numeric_features = self.numeric_features[0:3]
         
         self.category_features = "era"
 
@@ -42,10 +34,8 @@ class DataSet(ABC):
 
         self.updateFeaturesList()
 
-        self.generatePolynomialFeatures(2, False)
-
-        if self.test:
-            print(self.full_set)
+        if polynomial:
+            self.generatePolynomialFeatures(2, False, False)
 
         self.N = data.shape[0]
 
@@ -149,9 +139,9 @@ also be made on the train set prior to estimation.
 """
 class TestSet(DataSet):
 
-    def __init__(self, data, competition_type, era_cat, numeric_features, cluster_model, clusters):
+    def __init__(self, data, competition_type, era_cat, numeric_features, cluster_model, clusters, polynomial = True):
 
-        super(TestSet, self).__init__(data, competition_type)
+        super(TestSet, self).__init__(data, competition_type, polynomial = polynomial)
 
         self.numeric_features = numeric_features
         self.updateFeaturesList()
@@ -199,11 +189,20 @@ a second is the ability to provide
 """
 class TrainSet(DataSet):
 
-    def __init__(self, data, competition_type):
+    def __init__(self, data, competition_type, polynomial = True, reduce_features = True, test = False):
 
-        super(TrainSet, self).__init__(data, competition_type)
+        super(TrainSet, self).__init__(data, competition_type, polynomial)
 
-        # self.reduceFeatureSpace(0.05)
+        if reduce_features:
+            if test:
+                print('hit')
+                prob = 0
+            else:
+                prob = 0.05
+
+            self.reduceFeatureSpace(prob)
+
+
         self.updateFeaturesList()
 
         if self.estimate_clusters:

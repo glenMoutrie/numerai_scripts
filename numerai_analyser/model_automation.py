@@ -6,6 +6,7 @@ from sklearn.feature_selection import SelectFromModel
 from sklearn.svm import LinearSVC
 from sklearn.pipeline import Pipeline
 from xgboost import XGBClassifier, XGBRegressor
+from .DNN import DNNVanilla
 import time
 from datetime import datetime
 
@@ -158,10 +159,11 @@ class ModelTester():
         if verbose:
             print("Testing " + name + ":")
 
-        if name == 'xgboostReg':
+        if name in ['xgboostReg', 'DNN']:
 
             model.fit(data.getX(True), data.getY(True))
             results = model.predict(data.getX(False))
+
 
         else:
 
@@ -286,7 +288,7 @@ class ModelTester():
 
             model = self.models[i]
 
-            if i == 'xgboostReg':
+            if i in ['xgboostReg', 'DNN']:
 
                 model.fit(train.getX(), train.getY())
                 results = model.predict(test.getX())
@@ -344,7 +346,7 @@ class ModelTester():
 
             model = self.models[name]
 
-        if name == 'xgboostReg':
+        if name in ['xgboostReg', 'DNN']:
 
             model.fit(train_data.getX(), train_data.getY())
             output = model.predict(test_data.getX())
