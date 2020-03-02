@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from sklearn import metrics, preprocessing, linear_model, svm, metrics, ensemble, naive_bayes
+from sklearn import preprocessing, linear_model, svm, metrics, ensemble, naive_bayes
 from sklearn.model_selection import ShuffleSplit
 from sklearn.feature_selection import SelectFromModel
 from sklearn.svm import LinearSVC
@@ -9,12 +9,13 @@ from xgboost import XGBClassifier, XGBRegressor
 from .DNN import DNNVanilla
 import time
 from datetime import datetime
+from .model_metrics import ModelMetrics
 
 class ModelTester():
 
-    def __init__(self, models, eras, splits = 5, test_size = 0.25) :
+    def __init__(self, models, eras, config, splits = 5, test_size = 0.25) :
 
-        # self.appendFeatureSelection()
+        self.config = config
 
         self.models = models
         self.eras = eras.tolist() + ['all']
@@ -30,24 +31,24 @@ class ModelTester():
         index = [(i, j, k) for i in range(1, splits + 1) for j in self.eras for k in (list(models.keys()) + ['ensemble'])]
         index = pd.MultiIndex.from_tuples(index, names = ['split', 'era', 'model'])
 
-        self.measures =['duration', 'log_loss', 'corr', 'rsq', 'num_cov', 'precision', 'recall', 'f1', 'auc']
+        self.model_metrics = ModelMetrics()
 
-        self.model_performance = pd.DataFrame(columns = self.measures, index = index)
+        self.model_performance = pd.DataFrame(columns = self.model_metrics.measures, index = index)
 
         print(self.model_performance)
 
         self.best_model = None
 
-    # def appendFeatureSelection(self):
-    #     for name, model in zip(self.models.keys(), self.models.values()):
-    #         self.models[name] = Pipeline([('feature selection', SelectFromModel(model))
-    #             ('model', model)])
+
+    '''
+    The functions below are all for testing and training on the specified number of splits
+    '''
 
     def testAllSplits(self, data):
 
         for train_i, test_i in self.ss.split(data.getX()):
 
-            print("\n\nTesting split: " + str(self.splits_performed))
+            self.config.logger.info("TESTING SPLIT: " + str(self.splits_performed))
 
             data.updateSplit(train_i, test_i)
             self.splits_performed += 1
@@ -60,12 +61,194 @@ class ModelTester():
         print(self.all_ranks)
         print(self.all_valid_checks)
 
+    def testAllModels(self, data, models):
+
+        self.predictions = pd.DataFrame(columns = ['era'] + list(models.keys()) + ['ensemble'],
+            index = data.split_index['test'])
+
+        self.predictions['era'] = data.full_set.iloc[data.split_index['test']].era.to_numpy()
+
+        mp_update = {model: self.testModel(data, models.get(model), model) for model in models.keys()}
+
+        for update in mp_update.keys():
+            for era in self.eras:
+                self.model_performance.loc[(self.splits_performed, era, update)] = mp_update[update][era]
+
+        self.config.logger.info('Estimating ensemble predictions')
+
+        self.calculateEnsemblePredictions()
+
+        self.predictions.astype(dict(zip(list(models.keys()) + ['ensemble'], ['float64'])))
+
+        
+
+        for era in self.eras:
+
+            if era == 'all':
+                
+                _metrics == self.model_metrics.getMetrics(observed = data.getY(False).to_numpy(),
+                    results = self.predictions['ensemble'].to_numpy(),
+                    t1 = np.nan)
+
+            else:
+
+                _metrics = self.model_metrics.getMetrics(observed = data.getY(False, era).to_numpy(), 
+                results = self.predictions.loc[self.predictions.era == era, 'ensemble'].to_numpy(), 
+                t1 = np.nan)
+
+            self.model_performance.loc[(self.splits_performed, era, 'ensemble')] = _metrics
+
+    
+
+    def testModel(self, data, model, name):
+
+        t1 = time.time()
+
+        self.config.logger.info("TESTING " + name.upper() + "")
+
+        if name in ['xgboostReg', 'DNN']:
+
+            model.fit(data.getX(True), data.getY(True))
+            results = model.predict(data.getX(False))
+
+
+        else:
+
+            model.fit(data.getX(True), data.getY(True).round())
+            y_prediction = model.predict_proba(data.getX(False))
+            results = y_prediction[:, 1]
+
+        self.predictions[name] = results
+
+        metrics = {}
+
+        for era in self.eras:
+
+
+            if era == 'all':
+                all_metrics = self.model_metrics.getMetrics(data.getY(False).to_numpy(),  results, t1)
+                metrics[era] = all_metrics
+
+            else:
+
+                ind = np.isin(data.split_index['test'], np.argwhere(data.getEraIndex(era).to_numpy()))
+
+                metrics[era] = self.model_metrics.getMetrics(data.getY(False, era).to_numpy(), results[ind], t1)
+                
+        log = name.upper() + " METRICS:\t"
+        log += "Time taken: {:.2f}".format(all_metrics['duration']) + ", "
+        log += "Log loss: {:.2f}".format(all_metrics['log_loss']) + ", "
+        log += "Precision: {:.2f}".format(all_metrics['precision']) + ", "
+        log += "Recall: {:.2f}".format(all_metrics['recall'])
+
+        self.config.logger.info(log)
+
+        return metrics
+
+
+    def getBestModel(self):
+
+        # The below code is sometimes used for forcing a model...
+        # self.best_model = 'xgboost'
+        # return self.models['xgboost']
+
+        print(self.model_performance)
+
+        self.model_performance = self.model_performance.reset_index()
+
+        rank = self.getModelRank(self.model_performance)
+
+        self.config.logger.info('Model ranking: ')
+
+        print(rank.sort_values())
+
+        self.best_model = rank.idxmax()
+
+        self.config.logger.info("Best model: " + self.best_model)
+
+        self.logMetrics()
+
+        return self.best_model
+
+
+    def getModelRank(self, model_performance):
+
+        return model_performance\
+        .assign(log_loss = lambda x: x.log_loss * -1)\
+        .groupby('model')\
+        .apply(lambda x: x[self.model_metrics.target_measures].agg('mean'))\
+        .apply(lambda x: x.rank(pct = True, method = 'first'))\
+        .apply(lambda x: x.mean(), axis = 1)
+
+
+    def getBestPrediction(self, train_data, test_data):
+
+        name = self.getBestModel()
+
+        if name in ['xgboostReg', 'DNN']:
+
+            model = self.models[name]
+
+            model.fit(train_data.getX(), train_data.getY())
+            output = model.predict(test_data.getX())
+
+        elif name == 'ensemble':
+
+            test_eras = test_data.full_set.era.unique()
+
+            erax_validity = self.all_valid_checks\
+            .astype({'viable':'int32'})\
+            .groupby('model')['viable']\
+            .agg('mean')\
+            .apply(lambda x: x >= 0.2)
+
+            valid_models = erax_validity[erax_validity].index
+
+            if not erax_validity.any():
+
+                self.config.logger.warning("No valid models for EraX, using all")
+
+                valid_models = erax_validity.index
+
+            model_weights = self.all_ranks[list(valid_models)].agg(np.nan)
+
+            output = self.ensemblePrediction(valid_models, model_weights, train_data, test_data)
+
+        else:
+
+            model = self.models[name]
+
+            model.fit(train_data.getX(), train_data.getY().round())
+            y_prediction = model.predict_proba(test_data.getX())
+            output = y_prediction[:, 1]
+
+        return output
+
+
+    def logMetrics(self):
+
+        self.model_performance.to_csv(self.config.metric_loc)
+
+
+    '''
+
+    ENSEMBLE MODEL CALCULATION
+
+    All of the functions below are used to calculate the ensemble model.
+
+    As it would be costly to estimate all of the models each time this uses the predictions that have been already made on 
+    that test/split.
+    
+    '''
+
     def weightedAveragePreds(self, weights, predictions):
 
-        return predictions[weights.index.to_list()]\
+        weights = np.nan_to_num(weights)
+
+        output = predictions[weights.index.to_list()]\
         .apply(lambda x: np.average(x, weights = weights), axis = 1)
 
-
+        return output
 
 
     def calculateEnsemblePredictions(self):
@@ -107,184 +290,15 @@ class ModelTester():
 
         rank['split'] = self.splits_performed
         viable['split'] = self.splits_performed
-                
-
-
-
-
-
-    def testAllModels(self, data, models):
-
-        self.predictions = pd.DataFrame(columns = ['era'] + list(models.keys()) + ['ensemble'],
-            index = data.split_index['test'])
-
-        self.predictions['era'] = data.full_set.iloc[data.split_index['test']].era.to_numpy()
-
-        mp_update = {model: self.testModel(data, models.get(model), model) for model in models.keys()}
-
-        for update in mp_update.keys():
-            for era in self.eras:
-                self.model_performance.loc[(self.splits_performed, era, update)] = mp_update[update][era]
-
-        print('Estimating ensemble predictions')
-
-        self.calculateEnsemblePredictions()
-
-        self.predictions.astype(dict(zip(list(models.keys()) + ['ensemble'], ['float64'])))
-
-        
-
-        for era in self.eras:
-
-            if era == 'all':
-                
-                _metrics == self.getMetrics(observed = data.getY(False).to_numpy(),
-                    results = self.predictions['ensemble'].to_numpy(),
-                    t1 = np.nan)
-
-            else:
-
-                _metrics = self.getMetrics(observed = data.getY(False, era).to_numpy(), 
-                results = self.predictions.loc[self.predictions.era == era, 'ensemble'].to_numpy(), 
-                t1 = np.nan)
-
-            self.model_performance.loc[(self.splits_performed, era, 'ensemble')] = _metrics
-
     
-
-    def testModel(self, data, model, name, verbose = True):
-
-        t1 = time.time()
-
-        if verbose:
-            print("Testing " + name + ":")
-
-        if name in ['xgboostReg', 'DNN']:
-
-            model.fit(data.getX(True), data.getY(True))
-            results = model.predict(data.getX(False))
-
-
-        else:
-
-            model.fit(data.getX(True), data.getY(True).round())
-            y_prediction = model.predict_proba(data.getX(False))
-            results = y_prediction[:, 1]
-
-        self.predictions[name] = results
-
-        metrics = {}
-
-        for era in self.eras:
-
-
-            if era == 'all':
-                all_metrics = self.getMetrics(data.getY(False).to_numpy(),  results, t1)
-                metrics[era] = all_metrics
-
-            else:
-
-                ind = np.isin(data.split_index['test'], np.argwhere(data.getEraIndex(era).to_numpy()))
-
-                metrics[era] = self.getMetrics(data.getY(False, era).to_numpy(), results[ind], t1)
-                
-
-        if verbose:
-            print("Time taken: " + str(all_metrics['duration']) + 
-                "\nLog loss: " + str(all_metrics['log_loss']) + 
-                "\nPrecision: " + str(all_metrics['precision']) +
-                "\nRecall: " + str(all_metrics['recall']))
-
-        return metrics
-
-    def getMetrics(self,  observed, results, t1):
-        
-        binary_results = getBinaryPred(results)
-
-        stop_metrics = observed.size <= 1
-
-        stop_metrics = stop_metrics or (np.unique(results).size <= 1)
-
-        stop_metrics = stop_metrics or (np.unique(observed).size <= 1)
-
-        stop_metrics = stop_metrics or (np.unique(observed.round()).size <= 1)
-
-        stop_metrics = stop_metrics or (np.unique(binary_results).size <= 1)
-
-        if stop_metrics:
-            return(dict(zip(self.measures, [np.nan] * len(self.measures))))
-
-        duration = time.time() - t1
-
-
-        log_loss = metrics.log_loss(observed.round(), results)
-
-        corr = np.correlate(observed, results)[0]
-
-        num_cov = self.numeraiScore(results, observed)
-
-        rsq = metrics.r2_score(observed, results)
-
-        precision = metrics.precision_score(observed.round(), binary_results)
-
-        recall = metrics.recall_score(observed.round(), binary_results)
-
-        f1 = metrics.f1_score(observed.round(), binary_results)
-
-        auc = metrics.roc_auc_score(observed.round(), binary_results)
-
-
-        output = dict(zip(self.measures, [duration, log_loss, corr, num_cov, rsq, precision, recall, f1, auc]))
-
-
-        return output
-
-
-    def numeraiScore(self, train, test):
-        train = pd.Series(train, dtype = 'f').rank(pct = True, method = 'first').to_numpy()
-        return(np.corrcoef(train, test)[0,1])
-
-
-
-    def getBestModel(self):
-
-        # The below code is sometimes used for forcing a model...
-        # self.best_model = 'xgboost'
-        # return self.models['xgboost']
-
-        print(self.model_performance)
-
-        self.model_performance = self.model_performance.reset_index()
-
-        rank = self.getModelRank(self.model_performance)
-
-        print('Model ranking: ')
-
-        print(rank.sort_values())
-
-        self.best_model = rank.idxmax()
-
-        print("\n\nBest model: " + self.best_model)
-
-        self.logMetrics()
-
-        return self.best_model
-
-    def getModelRank(self, model_performance):
-
-        return model_performance\
-        .assign(log_loss = lambda x: x.log_loss * -1)\
-        .groupby('model')\
-        .apply(lambda x: x[self.measures[1:]].agg('mean'))\
-        .apply(lambda x: x.rank(pct = True, method = 'first'))\
-        .apply(lambda x: x.mean(), axis = 1)
-
 
     def ensemblePrediction(self, models, weights, train, test):
 
         predictions = pd.DataFrame(columns = models, index = [i for i in range(test.N)])
 
         for i in models:
+
+            self.config.logger.info('TRAINING ' + i.upper())
 
             model = self.models[i]
 
@@ -303,72 +317,4 @@ class ModelTester():
 
         output = self.weightedAveragePreds(weights, predictions)
 
-
-        # index = not test.getY().isnull()
-        # print(self.getMetrics(output.loc[index], test.getY().loc[index], np.nan))
-
         return(output)
-
-
-
-
-
-    def getBestPrediction(self, train_data, test_data):
-
-        name = self.getBestModel()
-
-        if name == 'ensemble':
-
-            test_eras = test_data.full_set.era.unique()
-
-            erax_validity = self.all_valid_checks\
-            .astype({'viable':'int32'})\
-            .groupby('model')['viable']\
-            .agg('mean')\
-            .apply(lambda x: x >= 0.2)
-
-            valid_models = erax_validity[erax_validity].index
-
-            print(erax_validity)
-
-            if not erax_validity.any():
-
-                print("No valid models for EraX, reverting to xgboost")
-
-                name = 'xgboost'
-                model = self.models[name]
-
-            else:
-
-                model_weights = self.all_ranks.loc['eraX', list(valid_models)].agg('mean')
-
-        else:
-
-            model = self.models[name]
-
-        if name in ['xgboostReg', 'DNN']:
-
-            model.fit(train_data.getX(), train_data.getY())
-            output = model.predict(test_data.getX())
-
-        elif name == 'ensemble':
-
-            output = self.ensemblePrediction(valid_models, model_weights, train_data, test_data)
-
-        else:
-
-            model.fit(train_data.getX(), train_data.getY().round())
-            y_prediction = model.predict_proba(test_data.getX())
-            output = y_prediction[:, 1]
-
-
-        # print("Test Log Loss: " + str(metrics.log_loss(test_data.getY("test"), model.predict_proba(test_data.getX("test"))[:,1])))
-
-        return output
-
-    def logMetrics(self):
-
-        self.model_performance.to_csv("logs/model_performance/metric_log_" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".csv")
-
-def getBinaryPred(values, level = 0.5):
-    return(values > level)

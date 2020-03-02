@@ -1,0 +1,7 @@
+2020-02-27 15:11:54,274 numerai_run INFO:	Running on the following competitions: kazutsugi
+2020-02-27 15:11:54,274 numerai_run INFO:	TEST RUN: synthetic data test
+2020-02-27 15:11:54,274 numerai_run INFO:	Running on comp kazutsugi
+2020-02-27 15:11:54,764 numerai_run INFO:	
+
+Testing split: 0
+2020-02-27 15:11:54,767 numerai_run INFO:	Testing logistic:

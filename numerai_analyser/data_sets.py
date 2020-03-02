@@ -196,9 +196,9 @@ class TrainSet(DataSet):
         if reduce_features:
             if test:
                 print('hit')
-                prob = 0
+                prob = 0.9
             else:
-                prob = 0.05
+                prob = 0.1
 
             self.reduceFeatureSpace(prob)
 

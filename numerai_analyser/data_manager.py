@@ -26,10 +26,15 @@ class NumeraiDataManager():
     pred_file = "predictions.csv"
     comps = None
 
-    def __init__(self, key_loc = "api_key", download_loc = "datasets/"):
+    training_data_file = 'numerai_training_data.csv'
+    test_data_file = 'numerai_tournament_data.csv'
 
-        self.readKey(key_loc)
-        self.download_loc = download_loc
+    def __init__(self, config):
+
+        self.config = config
+
+        self.readKey(config.key_loc)
+        self.download_loc = config.download_loc
         self.connect()
 
 
@@ -63,39 +68,33 @@ class NumeraiDataManager():
     def downloadLatest(self):
 
         round_num = self.api_conn.get_current_round()
-        # Hack as api appears to have broken...
-        # round_num = 148
 
         self.sub_folder = "numerai_dataset_" + str(round_num)
 
         if not self.sub_folder in os.listdir(self.download_loc):
             self.api_conn.download_current_dataset(self.download_loc, unzip = True)
         else:
-            print("Competion data for round " + str(round_num) + " already downloaded.")
+            self.config.logger.info("Competion data for round " + str(round_num) + " already downloaded.")
 
         self.sub_folder = self.sub_folder + "/"
 
-        # The api put the folder in a sub dir. Solustion left here, need to check on this later...
-        if round_num == 131:
-            self.sub_folder += "numerai_datasets/"
+    def uploadResults(self, results, name):
 
-    def uploadResults(self, name):
+        file_name = self.download_loc + self.sub_folder + self.config.time_file_safe + "_" + self.pred_file
+
+        self.config.logger.info("Writing results to " + self.config.logger.info(res))
+
+        results.to_csv(file_name, index = False)
+
+        self.config.logger.info("Uploading results to Numerai")
 
         comp_num = self.api_conn.tournament_name2number(name)
-        res = self.api_conn.upload_predictions(self.download_loc + self.sub_folder + self.pred_file, tournament=comp_num)
-        print(res)
+
+        res = self.api_conn.upload_predictions(file_name, tournament=comp_num)
+        self.config.logger.info(res)
 
     def getSubmissionStatus(self):
         print(self.api_conn.submission_status())
-
-
-
-
-class DataLoader(NumeraiDataManager):
-
-    training_data_file = 'numerai_training_data.csv'
-    test_data_file = 'numerai_tournament_data.csv'
-
 
     def read(self, test = False, test_type = TestType.SYNTHETIC_DATA, subset_size = 100):
 
@@ -115,11 +114,6 @@ class DataLoader(NumeraiDataManager):
                 self.train = subsetDataForTesting(self.train, subset_size)
                 self.test = subsetDataForTesting(self.test, subset_size)
 
-
-        
-    def write(self, output):
-        output.to_csv(self.download_loc + self.sub_folder + self.pred_file, index = False)
-
     def getData(self, competition_type, polynomial, reduce_features, test):
         self.train = TrainSet(self.train, competition_type, polynomial, reduce_features, test)
         self.test = TestSet(self.test, competition_type, self.train.getEras(), self.train.numeric_features, self.train.cluster_model,  self.train.clusters, polynomial)
@@ -133,9 +127,9 @@ def subsetDataForTesting(data, era_len = 100):
     return(pd.concat([data.loc[data.era == era][0:era_len] for era in data.era.unique()]))
 
 if __name__ == "__main__":
-    dl = DataLoader()
+    dl = NumeraiDataManager()
     dl.downloadLatest()
-    dl.uploadResults('bernie')
+    dl.uploadResults(dl.getCompetitions()[0])
 
 
 

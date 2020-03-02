@@ -1,0 +1,14 @@
+2020-03-01 13:12:49,695 numerai_run INFO:	Running on the following competitions: kazutsugi
+2020-03-01 13:12:49,695 numerai_run INFO:	Running on comp kazutsugi
+2020-03-01 16:25:11,128 numerai_run INFO:	TESTING SPLIT: 0
+2020-03-01 16:25:14,502 numerai_run INFO:	TESTING LOGISTIC
+2020-03-01 16:25:33,500 numerai_run INFO:	LOGISTIC METRICS:	Time taken: 18.83, Log loss: 0.67, Precision: 0.55, Recall: 0.00
+2020-03-01 16:25:33,500 numerai_run INFO:	TESTING NAIVEBAYES
+2020-03-01 16:25:49,527 numerai_run INFO:	NAIVEBAYES METRICS:	Time taken: 15.85, Log loss: 0.83, Precision: 0.41, Recall: 0.38
+2020-03-01 16:25:49,528 numerai_run INFO:	TESTING RANDOMFOREST
+2020-03-01 16:29:10,787 numerai_run INFO:	RANDOMFOREST METRICS:	Time taken: 201.09, Log loss: 0.68, Precision: 0.41, Recall: 0.12
+2020-03-01 16:29:10,793 numerai_run INFO:	TESTING EXTRATREES
+2020-03-01 16:34:31,784 numerai_run INFO:	EXTRATREES METRICS:	Time taken: 320.79, Log loss: 0.68, Precision: 0.42, Recall: 0.12
+2020-03-01 16:34:31,787 numerai_run INFO:	TESTING GRADIENTBOOSTING
+2020-03-01 16:38:24,512 numerai_run INFO:	GRADIENTBOOSTING METRICS:	Time taken: 232.57, Log loss: 0.67, Precision: 0.00, Recall: 0.00
+2020-03-01 16:38:24,514 numerai_run INFO:	TESTING XGBOOST

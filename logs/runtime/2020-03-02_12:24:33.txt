@@ -1,0 +1,26 @@
+2020-03-02 12:24:34,518 numerai_run INFO:	Running on the following competitions: kazutsugi
+2020-03-02 12:24:34,518 numerai_run INFO:	Running on comp kazutsugi
+2020-03-02 12:24:34,817 numerai_run INFO:	Competion data for round 201 already downloaded.
+2020-03-02 12:37:44,750 numerai_run INFO:	TESTING SPLIT: 0
+2020-03-02 12:37:47,786 numerai_run INFO:	TESTING LOGISTIC
+2020-03-02 12:38:06,603 numerai_run INFO:	LOGISTIC METRICS:	Time taken: 18.65, Log loss: 0.67, Precision: 0.40, Recall: 0.00
+2020-03-02 12:38:06,604 numerai_run INFO:	TESTING NAIVEBAYES
+2020-03-02 12:38:22,278 numerai_run INFO:	NAIVEBAYES METRICS:	Time taken: 15.50, Log loss: 0.83, Precision: 0.40, Recall: 0.37
+2020-03-02 12:38:22,278 numerai_run INFO:	TESTING RANDOMFOREST
+2020-03-02 12:41:46,877 numerai_run INFO:	RANDOMFOREST METRICS:	Time taken: 204.43, Log loss: 0.69, Precision: 0.41, Recall: 0.12
+2020-03-02 12:41:46,878 numerai_run INFO:	TESTING EXTRATREES
+2020-03-02 12:46:56,559 numerai_run INFO:	EXTRATREES METRICS:	Time taken: 309.51, Log loss: 0.68, Precision: 0.42, Recall: 0.12
+2020-03-02 12:46:56,562 numerai_run INFO:	TESTING GRADIENTBOOSTING
+2020-03-02 12:50:51,479 numerai_run INFO:	GRADIENTBOOSTING METRICS:	Time taken: 234.76, Log loss: 0.67, Precision: 0.71, Recall: 0.00
+2020-03-02 12:50:51,480 numerai_run INFO:	TESTING XGBOOST
+2020-03-02 12:56:02,079 numerai_run INFO:	XGBOOST METRICS:	Time taken: nan, Log loss: nan, Precision: nan, Recall: nan
+2020-03-02 12:56:02,083 numerai_run INFO:	TESTING XGBOOSTREG
+2020-03-02 13:01:11,749 numerai_run INFO:	XGBOOSTREG METRICS:	Time taken: 309.48, Log loss: 0.69, Precision: 0.42, Recall: 0.51
+2020-03-02 13:01:11,759 numerai_run INFO:	TESTING ADABOOST
+2020-03-02 13:02:24,897 numerai_run INFO:	ADABOOST METRICS:	Time taken: 72.97, Log loss: 0.69, Precision: 0.38, Recall: 0.00
+2020-03-02 13:02:24,904 numerai_run INFO:	TESTING DNN
+2020-03-02 13:02:52,900 numerai_run INFO:	DNN METRICS:	Time taken: 27.82, Log loss: 0.69, Precision: 0.41, Recall: 0.41
+2020-03-02 13:02:53,708 numerai_run INFO:	Estimating ensemble predictions
+2020-03-02 13:03:09,334 numerai_run INFO:	Model ranking: 
+2020-03-02 13:03:09,335 numerai_run INFO:	Best model: ensemble
+2020-03-02 13:03:09,382 numerai_run WARNING:	No valid models for EraX, using all

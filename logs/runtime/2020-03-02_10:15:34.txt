@@ -1,0 +1,66 @@
+2020-03-02 10:15:35,081 numerai_run INFO:	Running on the following competitions: kazutsugi
+2020-03-02 10:15:35,081 numerai_run INFO:	Running on comp kazutsugi
+2020-03-02 10:15:35,374 numerai_run INFO:	Competion data for round 201 already downloaded.
+2020-03-02 10:17:55,836 numerai_run INFO:	TESTING SPLIT: 0
+2020-03-02 10:17:55,890 numerai_run INFO:	TESTING LOGISTIC
+2020-03-02 10:17:57,117 numerai_run INFO:	LOGISTIC METRICS:	Time taken: 1.21, Log loss: 0.68, Precision: 0.49, Recall: 0.02
+2020-03-02 10:17:57,118 numerai_run INFO:	TESTING NAIVEBAYES
+2020-03-02 10:17:58,424 numerai_run INFO:	NAIVEBAYES METRICS:	Time taken: 1.29, Log loss: 4.11, Precision: 0.40, Recall: 0.51
+2020-03-02 10:17:58,424 numerai_run INFO:	TESTING RANDOMFOREST
+2020-03-02 10:18:04,560 numerai_run INFO:	RANDOMFOREST METRICS:	Time taken: 6.13, Log loss: 0.68, Precision: 0.42, Recall: 0.08
+2020-03-02 10:18:04,560 numerai_run INFO:	TESTING EXTRATREES
+2020-03-02 10:18:14,291 numerai_run INFO:	EXTRATREES METRICS:	Time taken: 9.72, Log loss: 0.69, Precision: 0.44, Recall: 0.12
+2020-03-02 10:18:14,291 numerai_run INFO:	TESTING GRADIENTBOOSTING
+2020-03-02 10:18:20,586 numerai_run INFO:	GRADIENTBOOSTING METRICS:	Time taken: 6.28, Log loss: 0.68, Precision: 0.42, Recall: 0.02
+2020-03-02 10:18:20,586 numerai_run INFO:	TESTING XGBOOST
+2020-03-02 10:18:33,749 numerai_run INFO:	XGBOOST METRICS:	Time taken: 13.15, Log loss: 0.67, Precision: 0.42, Recall: 0.01
+2020-03-02 10:18:33,753 numerai_run INFO:	TESTING XGBOOSTREG
+2020-03-02 10:18:47,309 numerai_run INFO:	XGBOOSTREG METRICS:	Time taken: 13.54, Log loss: 0.69, Precision: 0.42, Recall: 0.41
+2020-03-02 10:18:47,309 numerai_run INFO:	TESTING ADABOOST
+2020-03-02 10:18:49,838 numerai_run INFO:	ADABOOST METRICS:	Time taken: 2.51, Log loss: 0.69, Precision: 0.56, Recall: 0.02
+2020-03-02 10:18:49,838 numerai_run INFO:	TESTING DNN
+2020-03-02 10:18:52,256 numerai_run INFO:	DNN METRICS:	Time taken: 2.40, Log loss: 0.69, Precision: 0.40, Recall: 0.51
+2020-03-02 10:18:53,583 numerai_run INFO:	Estimating ensemble predictions
+2020-03-02 10:18:58,755 numerai_run INFO:	TESTING SPLIT: 1
+2020-03-02 10:18:58,798 numerai_run INFO:	TESTING LOGISTIC
+2020-03-02 10:19:00,255 numerai_run INFO:	LOGISTIC METRICS:	Time taken: 1.44, Log loss: 0.67, Precision: 0.39, Recall: 0.03
+2020-03-02 10:19:00,264 numerai_run INFO:	TESTING NAIVEBAYES
+2020-03-02 10:19:01,700 numerai_run INFO:	NAIVEBAYES METRICS:	Time taken: 1.42, Log loss: 4.03, Precision: 0.39, Recall: 0.46
+2020-03-02 10:19:01,700 numerai_run INFO:	TESTING RANDOMFOREST
+2020-03-02 10:19:08,438 numerai_run INFO:	RANDOMFOREST METRICS:	Time taken: 6.73, Log loss: 0.68, Precision: 0.47, Recall: 0.10
+2020-03-02 10:19:08,439 numerai_run INFO:	TESTING EXTRATREES
+2020-03-02 10:19:17,536 numerai_run INFO:	EXTRATREES METRICS:	Time taken: 9.09, Log loss: 0.68, Precision: 0.42, Recall: 0.12
+2020-03-02 10:19:17,536 numerai_run INFO:	TESTING GRADIENTBOOSTING
+2020-03-02 10:19:23,141 numerai_run INFO:	GRADIENTBOOSTING METRICS:	Time taken: 5.59, Log loss: 0.67, Precision: 0.44, Recall: 0.02
+2020-03-02 10:19:23,141 numerai_run INFO:	TESTING XGBOOST
+2020-03-02 10:19:37,047 numerai_run INFO:	XGBOOST METRICS:	Time taken: 13.89, Log loss: 0.67, Precision: 0.37, Recall: 0.01
+2020-03-02 10:19:37,047 numerai_run INFO:	TESTING XGBOOSTREG
+2020-03-02 10:19:50,334 numerai_run INFO:	XGBOOSTREG METRICS:	Time taken: 13.27, Log loss: 0.69, Precision: 0.41, Recall: 0.43
+2020-03-02 10:19:50,334 numerai_run INFO:	TESTING ADABOOST
+2020-03-02 10:19:53,029 numerai_run INFO:	ADABOOST METRICS:	Time taken: 2.68, Log loss: 0.69, Precision: 0.40, Recall: 0.03
+2020-03-02 10:19:53,029 numerai_run INFO:	TESTING DNN
+2020-03-02 10:19:55,053 numerai_run INFO:	DNN METRICS:	Time taken: 2.01, Log loss: 0.69, Precision: 0.41, Recall: 0.51
+2020-03-02 10:19:56,478 numerai_run INFO:	Estimating ensemble predictions
+2020-03-02 10:20:01,631 numerai_run INFO:	TESTING SPLIT: 2
+2020-03-02 10:20:01,673 numerai_run INFO:	TESTING LOGISTIC
+2020-03-02 10:20:03,137 numerai_run INFO:	LOGISTIC METRICS:	Time taken: 1.45, Log loss: 0.67, Precision: 0.46, Recall: 0.02
+2020-03-02 10:20:03,137 numerai_run INFO:	TESTING NAIVEBAYES
+2020-03-02 10:20:04,570 numerai_run INFO:	NAIVEBAYES METRICS:	Time taken: 1.42, Log loss: 3.46, Precision: 0.40, Recall: 0.44
+2020-03-02 10:20:04,570 numerai_run INFO:	TESTING RANDOMFOREST
+2020-03-02 10:20:11,739 numerai_run INFO:	RANDOMFOREST METRICS:	Time taken: 7.15, Log loss: 0.69, Precision: 0.41, Recall: 0.08
+2020-03-02 10:20:11,740 numerai_run INFO:	TESTING EXTRATREES
+2020-03-02 10:20:20,898 numerai_run INFO:	EXTRATREES METRICS:	Time taken: 9.15, Log loss: 0.69, Precision: 0.42, Recall: 0.12
+2020-03-02 10:20:20,898 numerai_run INFO:	TESTING GRADIENTBOOSTING
+2020-03-02 10:20:26,794 numerai_run INFO:	GRADIENTBOOSTING METRICS:	Time taken: 5.88, Log loss: 0.67, Precision: 0.43, Recall: 0.02
+2020-03-02 10:20:26,795 numerai_run INFO:	TESTING XGBOOST
+2020-03-02 10:20:40,363 numerai_run INFO:	XGBOOST METRICS:	Time taken: 13.56, Log loss: 0.67, Precision: 0.36, Recall: 0.01
+2020-03-02 10:20:40,363 numerai_run INFO:	TESTING XGBOOSTREG
+2020-03-02 10:20:53,746 numerai_run INFO:	XGBOOSTREG METRICS:	Time taken: 13.37, Log loss: 0.69, Precision: 0.39, Recall: 0.44
+2020-03-02 10:20:53,746 numerai_run INFO:	TESTING ADABOOST
+2020-03-02 10:20:56,412 numerai_run INFO:	ADABOOST METRICS:	Time taken: 2.65, Log loss: 0.69, Precision: 0.45, Recall: 0.02
+2020-03-02 10:20:56,412 numerai_run INFO:	TESTING DNN
+2020-03-02 10:20:58,490 numerai_run INFO:	DNN METRICS:	Time taken: 2.07, Log loss: 0.69, Precision: 0.41, Recall: 0.30
+2020-03-02 10:21:00,412 numerai_run INFO:	Estimating ensemble predictions
+2020-03-02 10:21:05,368 numerai_run INFO:	Model ranking: 
+2020-03-02 10:21:05,370 numerai_run INFO:	Best model: ensemble
+2020-03-02 10:21:05,434 numerai_run WARNING:	No valid models for EraX, using all

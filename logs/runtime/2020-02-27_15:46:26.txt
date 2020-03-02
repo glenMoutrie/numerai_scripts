@@ -1,0 +1,64 @@
+2020-02-27 15:46:27,012 numerai_run INFO:	Running on the following competitions: kazutsugi
+2020-02-27 15:46:27,012 numerai_run INFO:	Running on comp kazutsugi
+2020-02-27 15:46:27,494 numerai_run INFO:	TESTING SPLIT: 0
+2020-02-27 15:46:27,497 numerai_run INFO:	TESTING LOGISTIC
+2020-02-27 15:46:27,550 numerai_run INFO:	LOGISTIC METRICS:	Time taken: 0.05, Log loss: 0.69, Precision: 0.54, Recall: 0.65
+2020-02-27 15:46:27,551 numerai_run INFO:	TESTING NAIVEBAYES
+2020-02-27 15:46:27,579 numerai_run INFO:	NAIVEBAYES METRICS:	Time taken: nan, Log loss: nan, Precision: nan, Recall: nan
+2020-02-27 15:46:27,580 numerai_run INFO:	TESTING RANDOMFOREST
+2020-02-27 15:46:27,774 numerai_run INFO:	RANDOMFOREST METRICS:	Time taken: 0.19, Log loss: 1.90, Precision: 0.48, Recall: 0.57
+2020-02-27 15:46:27,774 numerai_run INFO:	TESTING EXTRATREES
+2020-02-27 15:46:27,919 numerai_run INFO:	EXTRATREES METRICS:	Time taken: 0.14, Log loss: 10.22, Precision: 0.52, Recall: 0.57
+2020-02-27 15:46:27,919 numerai_run INFO:	TESTING GRADIENTBOOSTING
+2020-02-27 15:46:28,011 numerai_run INFO:	GRADIENTBOOSTING METRICS:	Time taken: 0.09, Log loss: 0.86, Precision: 0.50, Recall: 0.57
+2020-02-27 15:46:28,011 numerai_run INFO:	TESTING XGBOOST
+2020-02-27 15:46:28,090 numerai_run INFO:	XGBOOST METRICS:	Time taken: 0.07, Log loss: 0.74, Precision: 0.45, Recall: 0.57
+2020-02-27 15:46:28,090 numerai_run INFO:	TESTING XGBOOSTREG
+2020-02-27 15:46:28,165 numerai_run INFO:	XGBOOSTREG METRICS:	Time taken: 0.07, Log loss: 0.76, Precision: 0.50, Recall: 0.65
+2020-02-27 15:46:28,165 numerai_run INFO:	TESTING ADABOOST
+2020-02-27 15:46:28,280 numerai_run INFO:	ADABOOST METRICS:	Time taken: 0.11, Log loss: 0.68, Precision: 0.57, Recall: 0.57
+2020-02-27 15:46:28,280 numerai_run INFO:	TESTING DNN
+2020-02-27 15:46:28,694 numerai_run INFO:	DNN METRICS:	Time taken: nan, Log loss: nan, Precision: nan, Recall: nan
+2020-02-27 15:46:28,742 numerai_run INFO:	Estimating ensemble predictions
+2020-02-27 15:46:29,047 numerai_run INFO:	TESTING SPLIT: 1
+2020-02-27 15:46:29,050 numerai_run INFO:	TESTING LOGISTIC
+2020-02-27 15:46:29,092 numerai_run INFO:	LOGISTIC METRICS:	Time taken: 0.04, Log loss: 0.77, Precision: 0.50, Recall: 0.55
+2020-02-27 15:46:29,092 numerai_run INFO:	TESTING NAIVEBAYES
+2020-02-27 15:46:29,114 numerai_run INFO:	NAIVEBAYES METRICS:	Time taken: nan, Log loss: nan, Precision: nan, Recall: nan
+2020-02-27 15:46:29,114 numerai_run INFO:	TESTING RANDOMFOREST
+2020-02-27 15:46:29,288 numerai_run INFO:	RANDOMFOREST METRICS:	Time taken: 0.17, Log loss: 1.90, Precision: 0.58, Recall: 0.38
+2020-02-27 15:46:29,288 numerai_run INFO:	TESTING EXTRATREES
+2020-02-27 15:46:29,424 numerai_run INFO:	EXTRATREES METRICS:	Time taken: 0.13, Log loss: 10.73, Precision: 0.58, Recall: 0.38
+2020-02-27 15:46:29,425 numerai_run INFO:	TESTING GRADIENTBOOSTING
+2020-02-27 15:46:29,519 numerai_run INFO:	GRADIENTBOOSTING METRICS:	Time taken: 0.09, Log loss: 1.03, Precision: 0.53, Recall: 0.31
+2020-02-27 15:46:29,519 numerai_run INFO:	TESTING XGBOOST
+2020-02-27 15:46:29,593 numerai_run INFO:	XGBOOST METRICS:	Time taken: 0.07, Log loss: 0.82, Precision: 0.67, Recall: 0.48
+2020-02-27 15:46:29,594 numerai_run INFO:	TESTING XGBOOSTREG
+2020-02-27 15:46:29,668 numerai_run INFO:	XGBOOSTREG METRICS:	Time taken: 0.07, Log loss: 0.85, Precision: 0.58, Recall: 0.38
+2020-02-27 15:46:29,669 numerai_run INFO:	TESTING ADABOOST
+2020-02-27 15:46:29,794 numerai_run INFO:	ADABOOST METRICS:	Time taken: 0.12, Log loss: 0.68, Precision: 0.63, Recall: 0.41
+2020-02-27 15:46:29,794 numerai_run INFO:	TESTING DNN
+2020-02-27 15:46:29,859 numerai_run INFO:	DNN METRICS:	Time taken: nan, Log loss: nan, Precision: nan, Recall: nan
+2020-02-27 15:46:29,899 numerai_run INFO:	Estimating ensemble predictions
+2020-02-27 15:46:30,120 numerai_run INFO:	TESTING SPLIT: 2
+2020-02-27 15:46:30,123 numerai_run INFO:	TESTING LOGISTIC
+2020-02-27 15:46:30,158 numerai_run INFO:	LOGISTIC METRICS:	Time taken: 0.03, Log loss: 0.67, Precision: 0.41, Recall: 0.35
+2020-02-27 15:46:30,159 numerai_run INFO:	TESTING NAIVEBAYES
+2020-02-27 15:46:30,204 numerai_run INFO:	NAIVEBAYES METRICS:	Time taken: 0.04, Log loss: 0.78, Precision: 0.45, Recall: 0.65
+2020-02-27 15:46:30,204 numerai_run INFO:	TESTING RANDOMFOREST
+2020-02-27 15:46:30,373 numerai_run INFO:	RANDOMFOREST METRICS:	Time taken: 0.17, Log loss: 1.09, Precision: 0.50, Recall: 0.70
+2020-02-27 15:46:30,373 numerai_run INFO:	TESTING EXTRATREES
+2020-02-27 15:46:30,512 numerai_run INFO:	EXTRATREES METRICS:	Time taken: 0.14, Log loss: 9.22, Precision: 0.47, Recall: 0.70
+2020-02-27 15:46:30,512 numerai_run INFO:	TESTING GRADIENTBOOSTING
+2020-02-27 15:46:30,609 numerai_run INFO:	GRADIENTBOOSTING METRICS:	Time taken: 0.09, Log loss: 0.79, Precision: 0.46, Recall: 0.55
+2020-02-27 15:46:30,609 numerai_run INFO:	TESTING XGBOOST
+2020-02-27 15:46:30,679 numerai_run INFO:	XGBOOST METRICS:	Time taken: 0.07, Log loss: 0.70, Precision: 0.40, Recall: 0.50
+2020-02-27 15:46:30,680 numerai_run INFO:	TESTING XGBOOSTREG
+2020-02-27 15:46:30,763 numerai_run INFO:	XGBOOSTREG METRICS:	Time taken: 0.08, Log loss: 0.68, Precision: 0.44, Recall: 0.70
+2020-02-27 15:46:30,763 numerai_run INFO:	TESTING ADABOOST
+2020-02-27 15:46:30,880 numerai_run INFO:	ADABOOST METRICS:	Time taken: 0.11, Log loss: 0.69, Precision: 0.52, Recall: 0.55
+2020-02-27 15:46:30,880 numerai_run INFO:	TESTING DNN
+2020-02-27 15:46:30,937 numerai_run INFO:	DNN METRICS:	Time taken: nan, Log loss: nan, Precision: nan, Recall: nan
+2020-02-27 15:46:30,982 numerai_run INFO:	Estimating ensemble predictions
+2020-02-27 15:46:31,248 numerai_run INFO:	Model ranking: 
+2020-02-27 15:46:31,249 numerai_run INFO:	Best model: ensemble
