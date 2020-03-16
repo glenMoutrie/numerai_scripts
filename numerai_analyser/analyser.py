@@ -60,12 +60,13 @@ def predictNumerai(test_run = False, test_type = TestType.SYNTHETIC_DATA, test_s
         'extraTrees' : ensemble.ExtraTreesClassifier(),
         'gradientBoosting' : ensemble.GradientBoostingClassifier(),
         'xgboost' : XGBClassifier(max_depth=5, learning_rate=0.01, n_estimators = n_est),#, early_stopping_rounds = 5),
+        'xgboost_num': XGBRegressor(max_depth=5, learning_rate=0.01, n_estimators= 20000, n_jobs=-1, colsample_bytree=0.1),
         'xgboostReg' : XGBRegressor(max_depth=5, learning_rate=0.01, n_estimators = n_est),#, early_stopping_rounds = 5),
         'adaBoost' : ensemble.AdaBoostClassifier(),
         'DNN': DNNVanilla(width = 10, depth = 1)
         }
 
-        tester = ModelTester(models, train.getEras(), config, 1, 0.25)
+        tester = ModelTester(models, train.getEras(), config, 3, 0.25)
 
         tester.testAllSplits(train)
 

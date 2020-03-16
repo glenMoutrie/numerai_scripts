@@ -20,8 +20,9 @@ class DataSet(ABC):
 
     poly = None
 
-    def __init__(self, data, competition_type, polynomial = False, estimate_clusters = False):
+    def __init__(self, config, data, competition_type, polynomial = False, estimate_clusters = False):
 
+        self.config = config
         self.full_set = data
         self.estimate_clusters = estimate_clusters
 
@@ -43,15 +44,15 @@ class DataSet(ABC):
 
     def reduceFeatureSpace(self, min_include):
 
-        print("Reducing Feature Space\nInitial feature set:")
-        print(self.numeric_features)
+        self.config.logger.info("Reducing Feature Space\nInitial feature set:")
+        self.config.logger.info(", ".join(self.numeric_features))
 
         # If True then this will re-run for every competion
         self.feature_selector = FeatureSelection(self.full_set, self.numeric_features, self.y_col)
         self.numeric_features = self.feature_selector.selectBestFeatures(min_include)
 
-        print("New feature space:")
-        print(self.numeric_features)
+        self.config.logger.info("New feature space:")
+        self.config.logger.info(", ".join(self.numeric_features))
 
 
     def updateFeaturesList(self, numeric_features = None, category_features = None):
@@ -139,9 +140,9 @@ also be made on the train set prior to estimation.
 """
 class TestSet(DataSet):
 
-    def __init__(self, data, competition_type, era_cat, numeric_features, cluster_model, clusters, polynomial = True):
+    def __init__(self, config, data, competition_type, era_cat, numeric_features, cluster_model, clusters, polynomial = True):
 
-        super(TestSet, self).__init__(data, competition_type, polynomial = polynomial)
+        super(TestSet, self).__init__(config, data, competition_type, polynomial = polynomial)
 
         self.numeric_features = numeric_features
         self.updateFeaturesList()
@@ -189,13 +190,12 @@ a second is the ability to provide
 """
 class TrainSet(DataSet):
 
-    def __init__(self, data, competition_type, polynomial = True, reduce_features = True, test = False):
+    def __init__(self, config, data, competition_type, polynomial = True, reduce_features = True, test = False):
 
-        super(TrainSet, self).__init__(data, competition_type, polynomial)
+        super(TrainSet, self).__init__(config, data, competition_type, polynomial)
 
         if reduce_features:
             if test:
-                print('hit')
                 prob = 0.9
             else:
                 prob = 0.1
@@ -207,7 +207,7 @@ class TrainSet(DataSet):
 
         if self.estimate_clusters:
 
-            print("Estimating Clusters")
+            self.config.logger.info("Estimating Clusters")
             self.cluster_model = ClusterFeature(self.full_set[self.numeric_features], None)
 
             cluster_id = self.cluster_model.assignClusters(self.full_set[self.numeric_features])

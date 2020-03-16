@@ -7,6 +7,7 @@ api_key
 *.swp
 dask-worker-space/*
 *.csv
+analyse_run/*
 
 # Venv
 bin/*
@@ -18,4 +19,5 @@ __pycache__
 numerai_analyser/__pycache__
 
 #logs
-logs/model_performance/*
+logs/model_perfomance/*
+logs/runtime/*

@@ -106,7 +106,7 @@ class ModelTester():
 
         self.config.logger.info("TESTING " + name.upper() + "")
 
-        if name in ['xgboostReg', 'DNN']:
+        if name in ['xgboostReg', 'xgboost_num', 'DNN']:
 
             model.fit(data.getX(True), data.getY(True))
             results = model.predict(data.getX(False))
@@ -185,7 +185,7 @@ class ModelTester():
 
         name = self.getBestModel()
 
-        if name in ['xgboostReg', 'DNN']:
+        if name in ['xgboostReg', 'xgboost_num', 'DNN']:
 
             model = self.models[name]
 
@@ -210,7 +210,7 @@ class ModelTester():
 
                 valid_models = erax_validity.index
 
-            model_weights = self.all_ranks[list(valid_models)].agg(np.nan)
+            model_weights = self.all_ranks[list(valid_models)].agg(np.nanmean)
 
             output = self.ensemblePrediction(valid_models, model_weights, train_data, test_data)
 
@@ -227,7 +227,7 @@ class ModelTester():
 
     def logMetrics(self):
 
-        self.model_performance.to_csv(self.config.metric_loc)
+        self.model_performance.to_csv(self.config.metric_loc_file)
 
 
     '''
@@ -243,7 +243,9 @@ class ModelTester():
 
     def weightedAveragePreds(self, weights, predictions):
 
-        weights = np.nan_to_num(weights)
+        weights = weights.fillna(0)
+
+        print(weights)
 
         output = predictions[weights.index.to_list()]\
         .apply(lambda x: np.average(x, weights = weights), axis = 1)
@@ -302,7 +304,7 @@ class ModelTester():
 
             model = self.models[i]
 
-            if i in ['xgboostReg', 'DNN']:
+            if i in ['xgboostReg', 'xgboost_num', 'DNN']:
 
                 model.fit(train.getX(), train.getY())
                 results = model.predict(test.getX())

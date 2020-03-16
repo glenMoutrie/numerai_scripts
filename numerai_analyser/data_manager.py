@@ -4,10 +4,10 @@ import numerapi as nmapi
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import PolynomialFeatures
-from .data_sets import *
+
 from .synthetic_numerai_data import SyntheticNumeraiData
 from .test_type import TestType
-
+from .data_sets import TestSet, TrainSet
 
 """
 
@@ -76,13 +76,13 @@ class NumeraiDataManager():
         else:
             self.config.logger.info("Competion data for round " + str(round_num) + " already downloaded.")
 
-        self.sub_folder = self.sub_folder + "/"
+        self.sub_folder = self.sub_folder
 
     def uploadResults(self, results, name):
 
-        file_name = self.download_loc + self.sub_folder + self.config.time_file_safe + "_" + self.pred_file
+        file_name = self.download_loc / self.sub_folder / (self.config.time_file_safe + "_" + self.pred_file)
 
-        self.config.logger.info("Writing results to " + self.config.logger.info(res))
+        self.config.logger.info("Writing results to " + file_name)
 
         results.to_csv(file_name, index = False)
 
@@ -99,6 +99,7 @@ class NumeraiDataManager():
     def read(self, test = False, test_type = TestType.SYNTHETIC_DATA, subset_size = 100):
 
         if test and test_type is TestType.SYNTHETIC_DATA:
+
             synthetic_data = SyntheticNumeraiData(comp = self.comps, observations = subset_size)
 
             self.train = synthetic_data.getTrainData()
@@ -106,8 +107,8 @@ class NumeraiDataManager():
 
         else:
 
-            self.train = pd.read_csv(self.download_loc + self.sub_folder + self.training_data_file, header = 0)
-            self.test = pd.read_csv(self.download_loc + self.sub_folder + self.test_data_file, header = 0)
+            self.train = pd.read_csv(self.download_loc / self.sub_folder / self.training_data_file, header = 0)
+            self.test = pd.read_csv(self.download_loc / self.sub_folder / self.test_data_file, header = 0)
 
             if test_type is TestType.SUBSET_DATA:
 
@@ -115,8 +116,15 @@ class NumeraiDataManager():
                 self.test = subsetDataForTesting(self.test, subset_size)
 
     def getData(self, competition_type, polynomial, reduce_features, test):
-        self.train = TrainSet(self.train, competition_type, polynomial, reduce_features, test)
-        self.test = TestSet(self.test, competition_type, self.train.getEras(), self.train.numeric_features, self.train.cluster_model,  self.train.clusters, polynomial)
+
+        self.train = TrainSet(config = self.config, data = self.train, 
+            competition_type = competition_type, polynomial = polynomial,
+            reduce_features = reduce_features, test = test)
+
+        self.test = TestSet(config = self.config, data = self.test, 
+            competition_type = competition_type, era_cat = self.train.getEras(), 
+            numeric_features = self.train.numeric_features, cluster_model = self.train.cluster_model, 
+            clusters = self.train.clusters, polynomial = polynomial)
 
         return self.train, self.test
         
@@ -127,8 +135,14 @@ def subsetDataForTesting(data, era_len = 100):
     return(pd.concat([data.loc[data.era == era][0:era_len] for era in data.era.unique()]))
 
 if __name__ == "__main__":
-    dl = NumeraiDataManager()
+
+    from .config import NumeraiConfig
+
+    conf = NumeraiConfig(True, TestType.SUBSET_DATA)
+    dl = NumeraiDataManager(conf)
+
     dl.downloadLatest()
+    dl.read()
     dl.uploadResults(dl.getCompetitions()[0])
 
 
