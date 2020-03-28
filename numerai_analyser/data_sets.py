@@ -26,7 +26,8 @@ class DataSet(ABC):
         self.full_set = data
         self.estimate_clusters = estimate_clusters
 
-        self.numeric_features = [f for f in list(self.full_set) if "feature" in f]
+        self.all_features = [f for f in list(self.full_set) if "feature" in f]
+        self.numeric_features = self.all_features
         
         self.category_features = "era"
 
@@ -157,7 +158,7 @@ class TestSet(DataSet):
         # Another gross hack with self.category_features[0]
         self.full_set[self.category_features] = pd.Categorical(self.full_set[self.category_features], ordered = True, categories = era_cat)
     
-    def getX(self, data_type = None, era = None):
+    def getX(self, data_type = None, all_features = False, era = None):
 
         if data_type is None:
             subset = [True] * self.full_set.shape[0]
@@ -167,7 +168,12 @@ class TestSet(DataSet):
         if era is not None:
             subset = subset & self.full_set == era
 
-        return pd.get_dummies(self.full_set.loc[subset, self.features])
+        if all_features:
+            feature_focus = self.all_features
+        else:
+            feature_focus = self.features
+
+        return pd.get_dummies(self.full_set.loc[subset, feature_focus])
 
     def getY(self, data_type = None, era = None):
 
@@ -259,7 +265,7 @@ class TrainSet(DataSet):
 
         return self.full_set[self.y_col].iloc[index]
 
-    def getX(self, train = None, era = None):
+    def getX(self, train = None, all_features = False, era = None):
 
 
         index = self.full_index
@@ -278,7 +284,12 @@ class TrainSet(DataSet):
 
             index = np.intersect1d(index, np.argwhere(self.full_set.era == era))
 
-        return pd.get_dummies(self.full_set[self.features].iloc[index])
+        if all_features:
+            feature_focus = self.all_features
+        else:
+            feature_focus = self.features
+
+        return pd.get_dummies(self.full_set[feature_focus].iloc[index])
 
 
 def subsetDataForTesting(data, era_len = 100):

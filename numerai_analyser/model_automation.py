@@ -106,11 +106,15 @@ class ModelTester():
 
         self.config.logger.info("TESTING " + name.upper() + "")
 
-        if name in ['xgboostReg', 'xgboost_num', 'DNN']:
+        if name in ['xgboostReg', 'DNN']:
 
             model.fit(data.getX(True), data.getY(True))
             results = model.predict(data.getX(False))
 
+        elif name in ['xgboost_num', 'DNN_full']:
+
+            model.fit(data.getX(train = True, all_features = True), data.getY(True))
+            results = model.predict(data.getX(train = False, all_features = True))
 
         else:
 
@@ -185,7 +189,7 @@ class ModelTester():
 
         name = self.getBestModel()
 
-        if name in ['xgboostReg', 'xgboost_num', 'DNN']:
+        if name in ['xgboostReg', 'DNN']:
 
             model = self.models[name]
 
@@ -206,13 +210,20 @@ class ModelTester():
 
             if not erax_validity.any():
 
-                self.config.logger.warning("No valid models for EraX, using all")
+                self.config.logger.warning("No valid models, using all")
 
                 valid_models = erax_validity.index
 
             model_weights = self.all_ranks[list(valid_models)].agg(np.nanmean)
 
             output = self.ensemblePrediction(valid_models, model_weights, train_data, test_data)
+
+        elif name in ['xgboost_num', 'DNN_full']:
+
+            model = self.models[name]
+
+            model.fit(train_data.getX(data_type = None, all_features = True), train_data.getY())
+            output = model.predict(test_data.getX())
 
         else:
 
@@ -304,10 +315,17 @@ class ModelTester():
 
             model = self.models[i]
 
-            if i in ['xgboostReg', 'xgboost_num', 'DNN']:
+            if i in ['xgboostReg', 'DNN']:
 
                 model.fit(train.getX(), train.getY())
                 results = model.predict(test.getX())
+
+            elif i in ['xgboost_num', 'DNN_full']:
+
+                model = self.models[i]
+
+                model.fit(train.getX(train = None, all_features = True), train.getY())
+                results = model.predict(test.getX(data_type = None, all_features = True))
 
             else:
 

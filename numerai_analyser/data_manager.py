@@ -82,7 +82,7 @@ class NumeraiDataManager():
 
         file_name = self.download_loc / self.sub_folder / (self.config.time_file_safe + "_" + self.pred_file)
 
-        self.config.logger.info("Writing results to " + file_name)
+        self.config.logger.info("Writing results to " + str(file_name))
 
         results.to_csv(file_name, index = False)
 
