@@ -166,7 +166,7 @@ class TestSet(DataSet):
             subset = self.full_set["data_type"] == data_type
 
         if era is not None:
-            subset = subset & self.full_set == era
+            subset = subset & self.full_set.era == era
 
         if all_features:
             feature_focus = self.all_features
@@ -183,7 +183,7 @@ class TestSet(DataSet):
             subset = self.full_set["data_type"] == data_type
 
         if era is not None:
-            subset = subset & self.full_set == era
+            subset = subset & self.full_set.era == era
 
         return self.full_set.loc[subset, self.y_col]
 
@@ -297,14 +297,3 @@ def subsetDataForTesting(data, era_len = 100):
     era_len -= 1
 
     return(pd.concat([data.iloc[np.random.shuffle(np.where(data.era == era))][0:era_len] for era in data.era.unique()]))
-
-if __name__ == "__main__":
-
-    df = pd.DataFrame({"era": ["a", "a", "b", "b"], "feature_one": [1,2,3,4], "feature_two": [5,6,7,8]})
-    ds = DataSet(df, "test")
-
-    print(ds.full_set)
-    print(ds.features)
-
-    print(ds.numeric_features)
-    print(ds.category_features)

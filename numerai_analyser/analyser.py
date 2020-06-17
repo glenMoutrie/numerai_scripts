@@ -23,12 +23,12 @@ from .test_type import TestType
 # 3) Performance
 #       a) Better parallelisation using Dask for model estimation 
 #       b) multiprocessing/dask for different cuts of the data
+#       c) Better unit testing
+#       d) Rethink data sets
 
-def predictNumerai(test_run = False, test_type = TestType.SYNTHETIC_DATA, test_size = 100):
+def predictNumerai(test_run = False, test_type = TestType.SYNTHETIC_DATA, test_size = 100, splits = 3):
 
-    config = NumeraiConfig(test_run, test_type)
-
-    config.setup()
+    config = NumeraiConfig(test_run, test_type, save_log_file= True)
 
     dl = NumeraiDataManager(config)
 
@@ -46,6 +46,8 @@ def predictNumerai(test_run = False, test_type = TestType.SYNTHETIC_DATA, test_s
         dl.read(test_run, test_type, test_size)
 
         train, test = dl.getData(comp, True, True, test_run)
+
+        print(test.full_set.era.describe())
 
         if test_run:
             n_est = 200
@@ -67,7 +69,7 @@ def predictNumerai(test_run = False, test_type = TestType.SYNTHETIC_DATA, test_s
         'DNN_full': DNNVanilla(width = 10, depth = 1)
         }
 
-        tester = ModelTester(models, train.getEras(), config, 3, 0.25)
+        tester = ModelTester(models, train.getEras(), config, splits, 0.25)
 
         tester.testAllSplits(train)
 

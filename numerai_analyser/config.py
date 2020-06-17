@@ -6,7 +6,7 @@ from pathlib import Path
 
 class NumeraiConfig():
 
-    def __init__(self, test_run, test_type):
+    def __init__(self, test_run = True, test_type = TestType.SYNTHETIC_DATA, save_log_file = False, key_loc = None):
 
         self.start_time = datetime.now()
 
@@ -16,6 +16,10 @@ class NumeraiConfig():
 
         self.test_run = test_run
 
+        self.save_log_file = save_log_file
+
+        self.key_loc = key_loc
+
         if test_run:
 
             self.test_type = test_type
@@ -24,20 +28,20 @@ class NumeraiConfig():
 
             self.test_type = None
 
+        self.setup()
+
     def setupLogger(self):
 
         self.logger = logging.getLogger('numerai_run')
 
-        # sys_out = logging.StreamHandler()
         log_file = logging.FileHandler(filename = self.log_text_file, mode = 'a')
 
         log_format = logging.Formatter('%(asctime)s %(name)s %(levelname)s:\t%(message)s')
 
-        # sys_out.setFormatter(log_format)
         log_file.setFormatter(log_format)
 
-        # self.logger.addHandler(sys_out)
-        self.logger.addHandler(log_file)
+        if self.save_log_file:
+            self.logger.addHandler(log_file)
 
     def setup(self):
 
@@ -60,9 +64,18 @@ class NumeraiConfig():
 
     def setupDirectories(self):
 
-        self.numerai_home = Path(os.getcwd())
+        if self.key_loc is not None:
+
+            self.key_loc = Path(self.key_loc)
+
+        else:
+
+            self.numerai_home = Path(os.getcwd())
 
         self.key_loc = self.numerai_home / "api_key"
+
+        if not self.key_loc.exists():
+            self.key_loc = None
 
         self.download_loc = setupDir(self.numerai_home / "datasets")
 
@@ -76,7 +89,7 @@ class NumeraiConfig():
 
 
 
-    def shutdown():
+    def shutdown(self):
         self.logger.shutdown()
 
 

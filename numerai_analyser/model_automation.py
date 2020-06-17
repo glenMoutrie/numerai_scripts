@@ -1,15 +1,54 @@
 import pandas as pd
 import numpy as np
+import scipy as sp
+
 from sklearn import preprocessing, linear_model, svm, metrics, ensemble, naive_bayes
 from sklearn.model_selection import ShuffleSplit
 from sklearn.feature_selection import SelectFromModel
 from sklearn.svm import LinearSVC
 from sklearn.pipeline import Pipeline
-from xgboost import XGBClassifier, XGBRegressor
-from .DNN import DNNVanilla
+from sklearn.preprocessing import MinMaxScaler
+
 import time
 from datetime import datetime
+
+from xgboost import XGBClassifier, XGBRegressor
+from .DNN import DNNVanilla
 from .model_metrics import ModelMetrics
+
+
+def _neutralize(df, columns, by, proportion=1.0):
+
+    scores = df[columns]
+    exposures = df[by].values
+    scores = scores - proportion * exposures.dot(np.linalg.pinv(exposures).dot(scores))
+
+    scores[scores < 0] = 0
+    scores[scores > 1] = 1
+
+    return scores / scores.std()
+    
+def _normalize(df):
+    X = (df.rank(method="first") - 0.5) / len(df)
+    return sp.stats.norm.ppf(X)
+
+def _normalize_and_neutralize(df, columns, by, proportion=1.0):
+    # Convert the scores to a normal distribution
+    df[columns] = _normalize(df[columns])
+    df[columns] = _neutralize(df, columns, by, proportion)
+    return df[columns]
+
+def normalizeAndNeutralize(predictions, test, proportion = 1.0):
+
+    X = test.getX(data_type = None, all_features = True)
+
+    output = X\
+    .assign(PREDS = predictions,
+        ERA = test.full_set.era)\
+    .groupby('ERA')\
+    .apply(lambda x: _normalize_and_neutralize(x, ["PREDS"], test.all_features))['PREDS']
+
+    return output
 
 class ModelTester():
 
@@ -34,8 +73,6 @@ class ModelTester():
         self.model_metrics = ModelMetrics()
 
         self.model_performance = pd.DataFrame(columns = self.model_metrics.measures, index = index)
-
-        print(self.model_performance)
 
         self.best_model = None
 
@@ -100,6 +137,9 @@ class ModelTester():
 
     
 
+    '''
+    Tests an individual model, collecting performance metrics by era.
+    '''
     def testModel(self, data, model, name):
 
         t1 = time.time()
@@ -160,7 +200,9 @@ class ModelTester():
 
         self.model_performance = self.model_performance.reset_index()
 
-        rank = self.getModelRank(self.model_performance)
+        # rank = self.getModelRank(self.model_performance)
+
+        rank = self.getModelSharpe(self.model_performance)
 
         self.config.logger.info('Model ranking: ')
 
@@ -184,6 +226,18 @@ class ModelTester():
         .apply(lambda x: x.rank(pct = True, method = 'first'))\
         .apply(lambda x: x.mean(), axis = 1)
 
+    def getModelSharpe(self, model_performance):
+
+        cov_mean = model_performance\
+        .groupby(['model'])\
+        .apply(lambda x: x.num_cov.mean())
+
+        cov_sd = model_performance\
+        .groupby(['model'])\
+        .apply(lambda x: x.num_cov.std())
+
+        return cov_mean/cov_sd
+
 
     def getBestPrediction(self, train_data, test_data):
 
@@ -198,32 +252,14 @@ class ModelTester():
 
         elif name == 'ensemble':
 
-            test_eras = test_data.full_set.era.unique()
-
-            erax_validity = self.all_valid_checks\
-            .astype({'viable':'int32'})\
-            .groupby('model')['viable']\
-            .agg('mean')\
-            .apply(lambda x: x >= 0.2)
-
-            valid_models = erax_validity[erax_validity].index
-
-            if not erax_validity.any():
-
-                self.config.logger.warning("No valid models, using all")
-
-                valid_models = erax_validity.index
-
-            model_weights = self.all_ranks[list(valid_models)].agg(np.nanmean)
-
-            output = self.ensemblePrediction(valid_models, model_weights, train_data, test_data)
+            output = self.ensemblePrediction(train_data, test_data)
 
         elif name in ['xgboost_num', 'DNN_full']:
 
             model = self.models[name]
 
-            model.fit(train_data.getX(data_type = None, all_features = True), train_data.getY())
-            output = model.predict(test_data.getX())
+            model.fit(train_data.getX(train = None, all_features = True), train_data.getY())
+            output = model.predict(test_data.getX(data_type = None, all_features = True))
 
         else:
 
@@ -232,6 +268,12 @@ class ModelTester():
             model.fit(train_data.getX(), train_data.getY().round())
             y_prediction = model.predict_proba(test_data.getX())
             output = y_prediction[:, 1]
+
+        # print(output.describe())
+
+        # output = normalizeAndNeutralize(output, test_data, 0.5)
+
+        # print(output.describe())
 
         return output
 
@@ -255,8 +297,6 @@ class ModelTester():
     def weightedAveragePreds(self, weights, predictions):
 
         weights = weights.fillna(0)
-
-        print(weights)
 
         output = predictions[weights.index.to_list()]\
         .apply(lambda x: np.average(x, weights = weights), axis = 1)
@@ -305,9 +345,28 @@ class ModelTester():
         viable['split'] = self.splits_performed
     
 
-    def ensemblePrediction(self, models, weights, train, test):
+    def ensemblePrediction(self, train, test):
+
+        test_eras = test.full_set.era.unique()
+
+        erax_validity = self.all_valid_checks\
+        .astype({'viable':'int32'})\
+        .groupby('model')['viable']\
+        .agg('mean')\
+        .apply(lambda x: x >= 0.2)
+
+        models = erax_validity[erax_validity].index.tolist()
+
+        if not erax_validity.any():
+
+            self.config.logger.warning("No valid models, using all")
+
+            models = erax_validity.index.tolist()
+
+        weights = self.all_ranks[list(models)].agg(np.nanmean)
 
         predictions = pd.DataFrame(columns = models, index = [i for i in range(test.N)])
+
 
         for i in models:
 

@@ -2,8 +2,7 @@ import io
 import os
 import numerapi as nmapi
 import pandas as pd
-import numpy as np
-from sklearn.preprocessing import PolynomialFeatures
+
 
 from .synthetic_numerai_data import SyntheticNumeraiData
 from .test_type import TestType
@@ -134,16 +133,6 @@ def subsetDataForTesting(data, era_len = 100):
 
     return(pd.concat([data.loc[data.era == era][0:era_len] for era in data.era.unique()]))
 
-if __name__ == "__main__":
-
-    from .config import NumeraiConfig
-
-    conf = NumeraiConfig(True, TestType.SUBSET_DATA)
-    dl = NumeraiDataManager(conf)
-
-    dl.downloadLatest()
-    dl.read()
-    dl.uploadResults(dl.getCompetitions()[0])
 
 
 
