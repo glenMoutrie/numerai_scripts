@@ -2,18 +2,13 @@ import pandas as pd
 import numpy as np
 import scipy as sp
 
-from sklearn import preprocessing, linear_model, svm, metrics, ensemble, naive_bayes
-from sklearn.model_selection import ShuffleSplit
-from sklearn.feature_selection import SelectFromModel
-from sklearn.svm import LinearSVC
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import MinMaxScaler
+from joblib import Parallel, delayed
+from sklearn import clone
+
+from sklearn.model_selection import GroupShuffleSplit
 
 import time
-from datetime import datetime
 
-from xgboost import XGBClassifier, XGBRegressor
-from .DNN import DNNVanilla
 from .model_metrics import ModelMetrics
 
 
@@ -23,10 +18,12 @@ def _neutralize(df, columns, by, proportion=1.0):
     exposures = df[by].values
     scores = scores - proportion * exposures.dot(np.linalg.pinv(exposures).dot(scores))
 
+    scores = scores / scores.std()
+
     scores[scores < 0] = 0
     scores[scores > 1] = 1
 
-    return scores / scores.std()
+    return scores
     
 def _normalize(df):
     X = (df.rank(method="first") - 0.5) / len(df)
@@ -65,7 +62,7 @@ class ModelTester():
         self.all_ranks = []
         self.all_valid_checks = []
 
-        self.ss = ShuffleSplit(n_splits = splits, test_size = test_size)
+        self.ss = GroupShuffleSplit(n_splits = splits, test_size = test_size)
 
         index = [(i, j, k) for i in range(1, splits + 1) for j in self.eras for k in (list(models.keys()) + ['ensemble'])]
         index = pd.MultiIndex.from_tuples(index, names = ['split', 'era', 'model'])
@@ -76,6 +73,8 @@ class ModelTester():
 
         self.best_model = None
 
+        self.parallel = Parallel(n_jobs=7, require = 'sharedmem')
+
 
     '''
     The functions below are all for testing and training on the specified number of splits
@@ -83,7 +82,7 @@ class ModelTester():
 
     def testAllSplits(self, data):
 
-        for train_i, test_i in self.ss.split(data.getX()):
+        for train_i, test_i in self.ss.split(data.getX(), groups = data.getEras()):
 
             self.config.logger.info("TESTING SPLIT: " + str(self.splits_performed))
 
@@ -105,7 +104,16 @@ class ModelTester():
 
         self.predictions['era'] = data.full_set.iloc[data.split_index['test']].era.to_numpy()
 
-        mp_update = {model: self.testModel(data, models.get(model), model) for model in models.keys()}
+        # mp_update = {model: self.testModel(data, models.get(model), model) for model in models.keys()}
+
+        mp_update = self.parallel(delayed(self.testModelThreadSafe)(data, clone(models.get(model)), model)
+                                  for model in models.keys() if not model.startswith('DNN'))
+
+        mp_update = {i[1]: i[0] for i in mp_update}
+
+        # Keras model compilation appears not to be thread safe
+        mp_update.update({model: self.testModel(data, models.get(model), model)
+                     for model in models.keys() if model.startswith('DNN')})
 
         for update in mp_update.keys():
             for era in self.eras:
@@ -123,7 +131,7 @@ class ModelTester():
 
             if era == 'all':
                 
-                _metrics == self.model_metrics.getMetrics(observed = data.getY(False).to_numpy(),
+                _metrics = self.model_metrics.getMetrics(observed = data.getY(False).to_numpy(),
                     results = self.predictions['ensemble'].to_numpy(),
                     t1 = np.nan)
 
@@ -137,10 +145,11 @@ class ModelTester():
 
     
 
-    '''
-    Tests an individual model, collecting performance metrics by era.
-    '''
+
     def testModel(self, data, model, name):
+        '''
+        Tests an individual model, collecting performance metrics by era.
+        '''
 
         t1 = time.time()
 
@@ -148,8 +157,8 @@ class ModelTester():
 
         if name in ['xgboostReg', 'DNN']:
 
-            model.fit(data.getX(True), data.getY(True))
-            results = model.predict(data.getX(False))
+            model.fit(data.getX(train = True), data.getY(train = True))
+            results = model.predict(data.getX(train = False))
 
         elif name in ['xgboost_num', 'DNN_full']:
 
@@ -158,8 +167,8 @@ class ModelTester():
 
         else:
 
-            model.fit(data.getX(True), data.getY(True).round())
-            y_prediction = model.predict_proba(data.getX(False))
+            model.fit(data.getX(train = True), data.getY(train = True).round())
+            y_prediction = model.predict_proba(data.getX(train = False))
             results = y_prediction[:, 1]
 
         self.predictions[name] = results
@@ -170,14 +179,14 @@ class ModelTester():
 
 
             if era == 'all':
-                all_metrics = self.model_metrics.getMetrics(data.getY(False).to_numpy(),  results, t1)
+                all_metrics = self.model_metrics.getMetrics(data.getY(train = False).to_numpy(),  results, t1)
                 metrics[era] = all_metrics
 
             else:
 
                 ind = np.isin(data.split_index['test'], np.argwhere(data.getEraIndex(era).to_numpy()))
 
-                metrics[era] = self.model_metrics.getMetrics(data.getY(False, era).to_numpy(), results[ind], t1)
+                metrics[era] = self.model_metrics.getMetrics(data.getY(train = False, era = era).to_numpy(), results[ind], t1)
                 
         log = name.upper() + " METRICS:\t"
         log += "Time taken: {:.2f}".format(all_metrics['duration']) + ", "
@@ -188,6 +197,58 @@ class ModelTester():
         self.config.logger.info(log)
 
         return metrics
+
+    def testModelThreadSafe(self, data, model, name):
+        '''
+        Tests an individual model, collecting performance metrics by era.
+        '''
+
+        t1 = time.time()
+
+        self.config.logger.info("TESTING " + name.upper() + "")
+
+        if name in ['xgboostReg', 'DNN']:
+
+            model.fit(data.getX(train=True), data.getY(train=True))
+            results = model.predict(data.getX(train=False))
+
+        elif name in ['xgboost_num', 'DNN_full']:
+
+            model.fit(data.getX(train=True, all_features=True), data.getY(True))
+            results = model.predict(data.getX(train=False, all_features=True))
+
+        else:
+
+            model.fit(data.getX(train=True), data.getY(train=True).round())
+            y_prediction = model.predict_proba(data.getX(train=False))
+            results = y_prediction[:, 1]
+
+        self.predictions[name] = results
+
+        metrics = {}
+
+        for era in self.eras:
+
+            if era == 'all':
+                all_metrics = self.model_metrics.getMetrics(data.getY(train=False).to_numpy(), results, t1)
+                metrics[era] = all_metrics
+
+            else:
+
+                ind = np.isin(data.split_index['test'], np.argwhere(data.getEraIndex(era).to_numpy()))
+
+                metrics[era] = self.model_metrics.getMetrics(data.getY(train=False, era=era).to_numpy(), results[ind],
+                                                             t1)
+
+        log = name.upper() + " METRICS:\t"
+        log += "Time taken: {:.2f}".format(all_metrics['duration']) + ", "
+        log += "Log loss: {:.2f}".format(all_metrics['log_loss']) + ", "
+        log += "Precision: {:.2f}".format(all_metrics['precision']) + ", "
+        log += "Recall: {:.2f}".format(all_metrics['recall'])
+
+        self.config.logger.info(log)
+
+        return metrics, name
 
 
     def getBestModel(self):
@@ -269,11 +330,9 @@ class ModelTester():
             y_prediction = model.predict_proba(test_data.getX())
             output = y_prediction[:, 1]
 
-        # print(output.describe())
+        output = normalizeAndNeutralize(output, test_data, 0.5)
 
-        # output = normalizeAndNeutralize(output, test_data, 0.5)
-
-        # print(output.describe())
+        print(output.describe())
 
         return output
 

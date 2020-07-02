@@ -1,4 +1,5 @@
 import os
+import io
 from datetime import datetime
 import logging
 from .test_type import TestType
@@ -6,7 +7,7 @@ from pathlib import Path
 
 class NumeraiConfig():
 
-    def __init__(self, test_run = True, test_type = TestType.SYNTHETIC_DATA, save_log_file = False, key_loc = None):
+    def __init__(self, test_run = True, test_type = TestType.SYNTHETIC_DATA, test_size = 100, save_log_file = False, key_loc = None):
 
         self.start_time = datetime.now()
 
@@ -20,13 +21,18 @@ class NumeraiConfig():
 
         self.key_loc = key_loc
 
+        self.user = None
+
+        self.key = None
+
         if test_run:
 
             self.test_type = test_type
+            self.test_size = test_size
 
         else:
 
-            self.test_type = None
+            self.test_type = self.test_size = None
 
         self.setup()
 
@@ -48,6 +54,13 @@ class NumeraiConfig():
         self.setupDirectories()
 
         self.setupLogger()
+
+        if self.key_loc.exists():
+
+            self.readKey(self.key_loc)
+
+        else:
+            self.key_loc = None
 
         os.environ["OMP_NUM_THREADS"] = "8"
 
@@ -74,9 +87,6 @@ class NumeraiConfig():
 
         self.key_loc = self.numerai_home / "api_key"
 
-        if not self.key_loc.exists():
-            self.key_loc = None
-
         self.download_loc = setupDir(self.numerai_home / "datasets")
 
         self.config_loc = setupDir(self.numerai_home / "logs" / "runtime")
@@ -87,6 +97,18 @@ class NumeraiConfig():
 
         self.log_text_file = self.config_loc / (self.time_file_safe + ".txt")
 
+
+    def readKey(self, key_loc):
+
+        file = io.open(key_loc)
+
+        output = file.read()
+        output = output.split("\n")
+
+        self.user = output[0]
+        self.key = output[1]
+
+        file.close()
 
 
     def shutdown(self):

@@ -2,6 +2,8 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 import pandas as pd
 import numpy as np
+import umap
+from apricot import FeatureBasedSelection
 
 import joblib
 from dask.distributed import Client, progress
@@ -15,25 +17,39 @@ client = Client(processes = False, threads_per_worker = 16, n_workers = 1)
 
 class ClusterFeature:
 
-    def __init__(self, data, clusters = None, min_clusters = 5, max_clusters = 6, components = 4):
+    def __init__(self, data, clusters = None, min_clusters = 5, max_clusters = 6, reduce_dim = True, components = 4):
 
         # self.components = components
         self.clusters = clusters
         self.max_cluster = max_clusters
         self.min_cluster = min_clusters
+        self.reduce_dim = reduce_dim
+        self.components = components
+        self.reducer = umap.UMAP(components)
+
+
+        if reduce_dim:
+            self.reduceDimensionsModelFit(data)
 
         self.estimateCenters(data)
-        # self.reduceDimensions(data)
-
-        # self.principle_components
 
 
+    def reduceDimensions(self, data):
 
-    # def reduceDimensions(data):
-    # 	self.pca_model = PCA(self.components)
-    # 	self.pca_model.fit(data)
+        return pd.DataFrame(self.reducer.transform(data))
 
-    # 	self.principle_components = pd.DataFrame(pca_model.transform())
+
+    def reduceDimensionsModelFit(self, data):
+
+        n = data.shape[0]
+
+        if n > 1000:
+
+            sampler = FeatureBasedSelection(500)
+
+            data = sampler.fit_transform(data.to_numpy())
+
+        self.reducer.fit(data)
 
     def range_d(self, start, end, step):
         output = []
@@ -48,6 +64,9 @@ class ClusterFeature:
 
 
     def estimateCenters(self, data):
+
+        if self.reduce_dim:
+            data = self.reduceDimensions(data)
 
         if self.clusters is None:
 
@@ -87,19 +106,24 @@ class ClusterFeature:
 
     def assignClusters(self, data):
 
-        return(self.cluster_model.predict(data))
+        if self.reduce_dim:
+            data = self.reduceDimensions(data)
+
+        return self.cluster_model.predict(data)
 
 
 if __name__ == "__main__":
     import random
 
-    test_data = pd.DataFrame({"one": [random.normalvariate(-i,1) for i in range(10)],
-        "two": [random.normalvariate(i,1) for i in range(10)],
-        "three": [random.normalvariate(i,1) for i in range(10)]})
+    n = 1010
 
-    new_data = 	pd.DataFrame({"one": [random.normalvariate(-i,1) for i in range(10)],
-        "two": [random.normalvariate(i,1) for i in range(10)],
-        "three": [random.normalvariate(i,1) for i in range(10)]})
+    test_data = pd.DataFrame({"one": [random.normalvariate(-i,1) for i in range(n)],
+        "two": [random.normalvariate(i,1) for i in range(n)],
+        "three": [random.normalvariate(i,1) for i in range(n)]})
+
+    new_data = 	pd.DataFrame({"one": [random.normalvariate(-i,1) for i in range(n)],
+        "two": [random.normalvariate(i,1) for i in range(n)],
+        "three": [random.normalvariate(i,1) for i in range(n)]})
 
     print(test_data)
 

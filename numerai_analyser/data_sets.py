@@ -5,14 +5,16 @@ from .feature_selection import FeatureSelection
 from .auto_cluster import ClusterFeature
 from abc import ABC, abstractmethod
 
-"""
 
-This module provides the structure for all data set classes. 
-
-The parent class DataSet contains all of the feature mapping that both the training set and test set need to perform.
-
-"""
 class DataSet(ABC):
+
+    """
+
+    This module provides the structure for all data set classes.
+
+    The parent class DataSet contains all of the feature mapping that both the training set and test set need to perform.
+
+    """
 
     split_index = {'train' : [], 'test' : []}
 
@@ -28,8 +30,10 @@ class DataSet(ABC):
 
         self.all_features = [f for f in list(self.full_set) if "feature" in f]
         self.numeric_features = self.all_features
+
+        self.eras = data.era.unique()
         
-        self.category_features = "era"
+        self.category_features = []
 
         self.competition_type = competition_type
         self.y_col = 'target_' + competition_type
@@ -64,7 +68,7 @@ class DataSet(ABC):
         if category_features is None:
             category_features = self.category_features
 
-        self.features = numeric_features + [category_features]
+        self.features = numeric_features + category_features
 
     def getID(self):
         return self.full_set["id"]
@@ -80,9 +84,12 @@ class DataSet(ABC):
     def getY(self):
         pass
 
-    def getEras(self):
+    def getEras(self, unique_eras = False):
 
-        return self.eras
+        if unique_eras:
+            return self.eras
+        else:
+            return self.full_set.era
 
     # TODO: fix poly for full_set
     def generatePolynomialFeatures(self, poly_degree = 2, interaction = False, log = True):
@@ -130,16 +137,17 @@ class DataSet(ABC):
             self.features += new_features
 
 
-"""
-TestSet
 
-The Test Set class provides all of the functionality that is unique to the test numerai set.
-
-A key feature is that any transformations that are made on the train set before modelling must
-also be made on the train set prior to estimation.
-
-"""
 class TestSet(DataSet):
+    """
+    TestSet
+
+    The Test Set class provides all of the functionality that is unique to the test numerai set.
+
+    A key feature is that any transformations that are made on the train set before modelling must
+    also be made on the train set prior to estimation.
+
+    """
 
     def __init__(self, config, data, competition_type, era_cat, numeric_features, cluster_model, clusters, polynomial = True):
 
@@ -155,8 +163,9 @@ class TestSet(DataSet):
             # self.category_features += ["cluster"]
 
         self.eras = self.full_set.era.unique()
-        # Another gross hack with self.category_features[0]
-        self.full_set[self.category_features] = pd.Categorical(self.full_set[self.category_features], ordered = True, categories = era_cat)
+
+        # This is no longer needed as era's should not be categorical
+        # self.full_set[self.category_features] = pd.Categorical(self.full_set[self.category_features], ordered = True, categories = era_cat)
     
     def getX(self, data_type = None, all_features = False, era = None):
 
@@ -187,14 +196,15 @@ class TestSet(DataSet):
 
         return self.full_set.loc[subset, self.y_col]
 
-"""
-Train Set
 
-This class has two key features. One is adding features that are used when testing models,
-a second is the ability to provide 
-
-"""
 class TrainSet(DataSet):
+    """
+    Train Set
+
+    This class has two key features. One is adding features that are used when testing models,
+    a second is the ability to provide
+
+    """
 
     def __init__(self, config, data, competition_type, polynomial = True, reduce_features = True, test = False):
 
@@ -204,7 +214,7 @@ class TrainSet(DataSet):
             if test:
                 prob = 0.9
             else:
-                prob = 0.1
+                prob = 0.01
 
             self.reduceFeatureSpace(prob)
 
@@ -232,9 +242,9 @@ class TrainSet(DataSet):
 
 
         # A HACK THAT I NEED TO FIX (subset category features to get 0)
-        self.eras = self.full_set[self.category_features].unique()
-        self.full_set[self.category_features] = pd.Categorical(self.full_set[self.category_features],
-            ordered = True, categories = self.eras)
+        # self.eras = self.full_set[self.category_features].unique()
+        # self.full_set[self.category_features] = pd.Categorical(self.full_set[self.category_features],
+        #     ordered = True, categories = self.eras)
 
         # Default value for the split index, this should be updated later externally
         self.split_index = {'train' : self.full_index, 'test' : []}
@@ -290,6 +300,8 @@ class TrainSet(DataSet):
             feature_focus = self.features
 
         return pd.get_dummies(self.full_set[feature_focus].iloc[index])
+
+
 
 
 def subsetDataForTesting(data, era_len = 100):

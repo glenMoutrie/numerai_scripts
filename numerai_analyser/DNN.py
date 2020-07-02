@@ -1,37 +1,45 @@
 import tensorflow as tf
 from tensorflow import keras
-import numpy as np
+from sklearn.base import BaseEstimator
+import threading
 
 
-class DNNVanilla():
-	
-	def __init__(self, width, depth, activation = 'relu', metrics = ['accuracy']):
+class DNNVanilla(BaseEstimator):
 
-		self.width = width
-		self.depth = depth
-		self.activation = activation
+    lock = threading.Lock()
 
-		model = keras.Sequential()
+    def __init__(self, width, depth, activation = 'relu', metrics = ['accuracy']):
 
-		for i in range(depth):
-			model.add(keras.layers.Dense(width, activation = activation))
+        self.width = width
+        self.depth = depth
+        self.activation = activation
+        self.metrics = metrics
 
-		model.add(keras.layers.Dense(1, activation = 'sigmoid'))
+        model = keras.Sequential()
 
-		model.compile(optimizer=tf.keras.optimizers.Adam(0.001),
-			loss='mse', metrics = metrics)
+        for i in range(depth):
+            model.add(keras.layers.Dense(width, activation = activation))
 
-		self.model = model
+        model.add(keras.layers.Dense(1, activation = 'sigmoid'))
 
-	def fit(self, X, y):
+        model.compile(optimizer=tf.keras.optimizers.Adam(0.001),
+            loss='mse', metrics = metrics)
 
-		self.model.fit(X.values, y.values)
+        self.model = model
 
-	def predict(self, X):
+    def fit(self, X, y):
 
-		output = self.model.predict(X.values).ravel()
+        self.model.fit(X.values, y.values, use_multiprocessing=False)
 
-		return(output)
+    def predict(self, X):
+
+        output = self.model.predict(X.values).ravel()
+
+        return(output)
+
+    def get_params(self, deep=True):
+
+        return {'width': self.width, 'depth': self.depth, 'activation': self.activation, 'metrics' : self.metrics}
 
 
 
