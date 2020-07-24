@@ -18,7 +18,7 @@ tryCatch({
 	mm <- model.matrix(form, data)
 	resp <- model.response(model.frame(form, data))
 
-	model <- logit.spike(form, niter = 500, data)
+	model <- lm.spike(form, niter = 500, data)
 	output <- colMeans(model$beta != 0)
 
 	output <- data.frame(variable = names(output), probability = output)

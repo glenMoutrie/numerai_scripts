@@ -1,5 +1,5 @@
 from sklearn import linear_model, ensemble, naive_bayes, metrics
-from sklearn.model_selection import RandomizedSearchCV, GroupShuffleSplit
+from sklearn.model_selection import RandomizedSearchCV, ShuffleSplit
 
 from xgboost import XGBClassifier, XGBRegressor
 from .DNN import DNNVanilla
@@ -35,7 +35,10 @@ class ModelFactory:
         self.models['DNN'] =  DNNVanilla(width=10, depth=1)
         self.models['DNN_full'] = DNNVanilla(width=10, depth=1)
 
-    def cross_validate_model_params(self, data):
+        self.predict_only = ['xgboostReg', 'DNN']
+        self.use_all_features = ['xgboost_num', 'DNN_full']
+
+    def cross_validate_model_params(self, data, splits = 10):
 
         parameters = {'n_estimators': stats.randint(150, 500),
                       'learning_rate': stats.uniform(0.01, 0.07),
@@ -45,18 +48,15 @@ class ModelFactory:
                       'min_child_weight': [1, 2, 3]
                       }
 
-        scores = {'mae': metrics.make_scorer(metrics.mean_absolute_error),
-                  'explained_variance': metrics.make_scorer(metrics.explained_variance_score)}
-
-        cv = GroupShuffleSplit()
+        cv = ShuffleSplit(n_splits=splits)
 
         gscv = RandomizedSearchCV(XGBRegressor(), param_distributions=parameters, n_jobs=7,
                                   scoring=metrics.make_scorer(metrics.mean_absolute_error),
                                   cv=cv, verbose=5, return_train_score=True)
 
         gscv.fit(data.getX(),
-                 data.getY(),
-                 data.getEras())
+                 data.getY())
 
-        self.models['xgbReg_cv_param'] = XGBRegressor(**gscv.best_params_)
+        self.models['xgboostReg_cv_param'] = XGBRegressor(**gscv.best_params_)
+        self.predict_only.append('xgboostReg_cv_param')
 

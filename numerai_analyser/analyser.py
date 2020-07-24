@@ -7,25 +7,6 @@ from .data_manager import NumeraiDataManager
 from .test_type import TestType
 from .model_factory import ModelFactory
 
-# Route map for model_improvements branch
-# 1) Improve logging so that you can assess improvement of implementation
-#       a) More measurements of predictive accuarcy - DONE
-#       b) Bench mark model run times - DONE
-#       c) Break down of era's with good/bad predictions - DONE
-#       d) Potentially consider implementing postgres db...
-#
-# 2) Model selection
-#       a) Create a better voting system for model selection, consider going for an ensemble approach - DONE
-#       b) This needs to rely somewhat on the architecture used for logging - DONE
-#       c) Better hyperparamter selection - DONE(ish)
-#       d) Maybe... maybe implement dnn... - DONE
-#       e) incorporate boom spike slab without polynomial - DONE
-#
-# 3) Performance
-#       a) Better parallelisation using Dask for model estimation 
-#       b) multiprocessing/dask for different cuts of the data
-#       c) Better unit testing
-#       d) Rethink data sets
 
 def predictNumerai(test_run = False, test_type = TestType.SYNTHETIC_DATA, test_size = 100, splits = 3):
 
@@ -41,17 +22,22 @@ def predictNumerai(test_run = False, test_type = TestType.SYNTHETIC_DATA, test_s
 
         config.logger.info('Running on comp ' + comp)
 
-        train, test = dl.getData(competition_type = comp, polynomial = False, reduce_features = False)
+        train, test = dl.getData(competition_type = comp,   polynomial = True, reduce_features = True)
 
         if test_run:
             n_est = 200
+            cv_splits = 2
+
         else:
-            # n_est = 20000
-            n_est = 200
+
+            n_est = 1000 # numerai recomendation is 20000 but takes ~4hrs+ per fit
+            cv_splits = 10
 
         mf = ModelFactory(n_est)
 
-        tester = ModelTester(mf.models, train.getEras(unique_eras = True), config, splits, 0.25)
+        mf.cross_validate_model_params(train, cv_splits)
+
+        tester = ModelTester(mf, train.getEras(unique_eras = True), config, splits, 0.25)
 
         tester.testAllSplits(train)
 

@@ -5,7 +5,7 @@ import scipy as sp
 from joblib import Parallel, delayed
 from sklearn import clone
 
-from sklearn.model_selection import GroupShuffleSplit
+from sklearn.model_selection import ShuffleSplit
 
 import time
 
@@ -49,11 +49,12 @@ def normalizeAndNeutralize(predictions, test, proportion = 1.0):
 
 class ModelTester():
 
-    def __init__(self, models, eras, config, splits = 5, test_size = 0.25) :
+    def __init__(self, model_factory, eras, config, splits = 5, test_size = 0.25) :
 
         self.config = config
 
-        self.models = models
+        self.model_factory = model_factory
+
         self.eras = eras.tolist() + ['all']
 
         self.splits = splits
@@ -62,14 +63,14 @@ class ModelTester():
         self.all_ranks = []
         self.all_valid_checks = []
 
-        self.ss = GroupShuffleSplit(n_splits = splits, test_size = test_size)
+        self.ss = ShuffleSplit(n_splits = splits, test_size = test_size)
 
-        index = [(i, j, k) for i in range(1, splits + 1) for j in self.eras for k in (list(models.keys()) + ['ensemble'])]
+        index = [(i, j, k) for i in range(1, splits + 1) for j in self.eras for k in (list(self.model_factory.models.keys()) + ['ensemble'])]
         index = pd.MultiIndex.from_tuples(index, names = ['split', 'era', 'model'])
 
         self.model_metrics = ModelMetrics()
 
-        self.model_performance = pd.DataFrame(columns = self.model_metrics.measures, index = index)
+        self.model_performance = pd.DataFrame(columns = self.model_metrics.measures, index = index, dtype = np.float)
 
         self.best_model = None
 
@@ -82,20 +83,17 @@ class ModelTester():
 
     def testAllSplits(self, data):
 
-        for train_i, test_i in self.ss.split(data.getX(), groups = data.getEras()):
+        for train_i, test_i in self.ss.split(data.getX()):
 
             self.config.logger.info("TESTING SPLIT: " + str(self.splits_performed))
 
             data.updateSplit(train_i, test_i)
             self.splits_performed += 1
 
-            self.testAllModels(data,  self.models)
+            self.testAllModels(data,  self.model_factory.models)
 
         self.all_ranks = pd.concat(self.all_ranks)
         self.all_valid_checks = pd.concat(self.all_valid_checks)
-
-        print(self.all_ranks)
-        print(self.all_valid_checks)
 
     def testAllModels(self, data, models):
 
@@ -155,12 +153,12 @@ class ModelTester():
 
         self.config.logger.info("TESTING " + name.upper() + "")
 
-        if name in ['xgboostReg', 'DNN']:
+        if name in self.model_factory.predict_only:
 
             model.fit(data.getX(train = True), data.getY(train = True))
             results = model.predict(data.getX(train = False))
 
-        elif name in ['xgboost_num', 'DNN_full']:
+        elif name in self.model_factory.use_all_features:
 
             model.fit(data.getX(train = True, all_features = True), data.getY(True))
             results = model.predict(data.getX(train = False, all_features = True))
@@ -207,12 +205,12 @@ class ModelTester():
 
         self.config.logger.info("TESTING " + name.upper() + "")
 
-        if name in ['xgboostReg', 'DNN']:
+        if name in self.model_factory.predict_only:
 
             model.fit(data.getX(train=True), data.getY(train=True))
             results = model.predict(data.getX(train=False))
 
-        elif name in ['xgboost_num', 'DNN_full']:
+        elif name in self.model_factory.use_all_features:
 
             model.fit(data.getX(train=True, all_features=True), data.getY(True))
             results = model.predict(data.getX(train=False, all_features=True))
@@ -255,9 +253,7 @@ class ModelTester():
 
         # The below code is sometimes used for forcing a model...
         # self.best_model = 'xgboost'
-        # return self.models['xgboost']
-
-        print(self.model_performance)
+        # return self.model_factory.models['xgboost']
 
         self.model_performance = self.model_performance.reset_index()
 
@@ -267,7 +263,7 @@ class ModelTester():
 
         self.config.logger.info('Model ranking: ')
 
-        print(rank.sort_values())
+        self.config.logger.info(str(rank.sort_values()))
 
         self.best_model = rank.idxmax()
 
@@ -281,11 +277,11 @@ class ModelTester():
     def getModelRank(self, model_performance):
 
         return model_performance\
-        .assign(log_loss = lambda x: x.log_loss * -1)\
-        .groupby('model')\
-        .apply(lambda x: x[self.model_metrics.target_measures].agg('mean'))\
-        .apply(lambda x: x.rank(pct = True, method = 'first'))\
-        .apply(lambda x: x.mean(), axis = 1)
+            .assign(log_loss = lambda x: x.log_loss * -1)\
+            .groupby('model')\
+            .apply(lambda x: x[self.model_metrics.target_measures].agg('mean'))\
+            .apply(lambda x: x.rank(pct = True, method = 'first'))\
+            .apply(lambda x: x.mean(), axis = 1)
 
     def getModelSharpe(self, model_performance):
 
@@ -304,9 +300,9 @@ class ModelTester():
 
         name = self.getBestModel()
 
-        if name in ['xgboostReg', 'DNN']:
+        if name in self.model_factory.predict_only:
 
-            model = self.models[name]
+            model = self.model_factory.models[name]
 
             model.fit(train_data.getX(), train_data.getY())
             output = model.predict(test_data.getX())
@@ -315,24 +311,38 @@ class ModelTester():
 
             output = self.ensemblePrediction(train_data, test_data)
 
-        elif name in ['xgboost_num', 'DNN_full']:
+        elif name in self.model_factory.use_all_features:
 
-            model = self.models[name]
+            model = self.model_factory.models[name]
 
             model.fit(train_data.getX(train = None, all_features = True), train_data.getY())
             output = model.predict(test_data.getX(data_type = None, all_features = True))
 
         else:
 
-            model = self.models[name]
+            model = self.model_factory.models[name]
 
             model.fit(train_data.getX(), train_data.getY().round())
             y_prediction = model.predict_proba(test_data.getX())
             output = y_prediction[:, 1]
 
+        metrics_orig = self.model_metrics.getNumeraiScoreByEra(test_data.getY(), output, test_data.getEras())
+
+        self.config.logger.info("Neutralizing predictions")
         output = normalizeAndNeutralize(output, test_data, 0.5)
 
-        print(output.describe())
+        self.config.logger.info("Predictions summary statistics:")
+        self.config.logger.info(str(output.describe()))
+
+        metrics_normalized = self.model_metrics.getNumeraiScoreByEra(test_data.getY(), output, test_data.getEras())
+
+        self.config.logger.info("Original Numerai Score:")
+        self.config.logger.info("Validation Correlation: {0}\nValidation Sharpe: {1}"\
+                                  .format(metrics_orig['correlation'], metrics_orig['sharpe']))
+
+        self.config.logger.info("Neutralized Numerai Score:")
+        self.config.logger.info("Validation Correlation: {0}\nValidation Sharpe: {1}" \
+                                  .format(metrics_normalized['correlation'], metrics_normalized['sharpe']))
 
         return output
 
@@ -376,7 +386,7 @@ class ModelTester():
         viable = self.model_performance\
         .loc[index]\
         .groupby(['era', 'model'])\
-        .apply(lambda x: x.auc.min() >= 0.5 and x.rsq.min() > 0 and x.f1.min() > 0.5)\
+        .apply(lambda x: x.num_cov.mean() > 0)\
         .rename('viable')\
         .reset_index()
 
@@ -422,6 +432,10 @@ class ModelTester():
 
             models = erax_validity.index.tolist()
 
+        else:
+
+            self.config.logger.info("Valid models: " + ", ".join(erax_validity[erax_validity].index.tolist()))
+
         weights = self.all_ranks[list(models)].agg(np.nanmean)
 
         predictions = pd.DataFrame(columns = models, index = [i for i in range(test.N)])
@@ -431,16 +445,16 @@ class ModelTester():
 
             self.config.logger.info('TRAINING ' + i.upper())
 
-            model = self.models[i]
+            model = self.model_factory.models[i]
 
-            if i in ['xgboostReg', 'DNN']:
+            if i in self.model_factory.predict_only:
 
                 model.fit(train.getX(), train.getY())
                 results = model.predict(test.getX())
 
-            elif i in ['xgboost_num', 'DNN_full']:
+            elif i in self.model_factory.use_all_features:
 
-                model = self.models[i]
+                model = self.model_factory.models[i]
 
                 model.fit(train.getX(train = None, all_features = True), train.getY())
                 results = model.predict(test.getX(data_type = None, all_features = True))

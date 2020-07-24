@@ -18,7 +18,8 @@ class DNNVanilla(BaseEstimator):
         model = keras.Sequential()
 
         for i in range(depth):
-            model.add(keras.layers.Dense(width, activation = activation))
+            model.add(keras.layers.Dense(width, activation = activation, kernel_regularizer= keras.regularizers.l1_l2(l1=1e-5, l2=1e-4)))
+            model.add(keras.layers.Dropout(0.25))
 
         model.add(keras.layers.Dense(1, activation = 'sigmoid'))
 

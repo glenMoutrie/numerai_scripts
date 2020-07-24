@@ -21,6 +21,19 @@ class ModelMetrics():
 
         return(np.corrcoef(train, test)[0,1])
 
+    def getNumeraiScoreByEra(self, target, predictions, era):
+
+        measures = pd.DataFrame({'preds': target, 'preds_neutralized': predictions}) \
+            .groupby(era) \
+            .apply(lambda x: self.numeraiScore(x.preds, x.preds_neutralized)) \
+            .agg(['mean', 'std'])
+
+        output = {}
+        output['correlation'] = measures['mean']
+        output['sharpe'] = measures['mean'] / measures['std']
+
+        return output
+
     def checkMetricViability(self, observed, results):
 
         stop_metrics = observed.size <= 1
