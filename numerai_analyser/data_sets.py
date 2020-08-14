@@ -16,7 +16,7 @@ class DataSet(ABC):
 
     """
 
-    split_index = {'train' : [], 'test' : []}
+    split_index = {'train': [], 'test': []}
 
     full_set = np.ndarray(None)
 
@@ -52,7 +52,7 @@ class DataSet(ABC):
         self.config.logger.info("Reducing Feature Space\nInitial feature set:")
         self.config.logger.info(", ".join(self.numeric_features))
 
-        # If True then this will re-run for every competion
+        # If True then this will re-run for every competition
         self.feature_selector = FeatureSelection(self.full_set, self.numeric_features, self.y_col)
         self.numeric_features = self.feature_selector.selectBestFeatures(min_include)
 

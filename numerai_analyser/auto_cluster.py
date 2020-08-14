@@ -2,8 +2,8 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 import pandas as pd
 import numpy as np
-import umap
-from apricot import FeatureBasedSelection
+# import umap
+# from apricot import FeatureBasedSelection
 
 import joblib
 from dask.distributed import Client, progress

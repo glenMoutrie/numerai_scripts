@@ -22,7 +22,7 @@ def predictNumerai(test_run = False, test_type = TestType.SYNTHETIC_DATA, test_s
 
         config.logger.info('Running on comp ' + comp)
 
-        train, test = dl.getData(competition_type = comp,   polynomial = True, reduce_features = True)
+        train, test = dl.getData(competition_type = comp,   polynomial = False, reduce_features = True)
 
         if test_run:
             n_est = 200

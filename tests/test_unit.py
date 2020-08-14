@@ -49,6 +49,15 @@ class TestAutoCluster:
 
 
 
+class TestFeatureSelection():
+
+    def test_feature_selection_r(self):
+        test = pd.DataFrame({"one" : [1,2,3], "two": [4,5,6], "pred" : [0, 0, 1]})
+        fs = FeatureSelection(test, ["one", "two"], "pred")
+
+        print(fs.output)
+        print(fs.output.iloc[[1],[0]])
+        print(fs.selectBestFeatures(0.1))
 
 
 class TestDataManager():

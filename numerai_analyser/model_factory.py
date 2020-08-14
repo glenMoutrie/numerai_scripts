@@ -20,19 +20,19 @@ class ModelFactory:
     def createModelClasses(self):
 
         self.models['logistic'] = linear_model.LogisticRegression()
-        self.models['naiveBayes'] =  naive_bayes.GaussianNB()
-        self.models['randomForest'] =  ensemble.RandomForestClassifier()
-        self.models['extraTrees'] =  ensemble.ExtraTreesClassifier()
-        self.models['gradientBoosting'] =  ensemble.GradientBoostingClassifier()
+        self.models['naiveBayes'] = naive_bayes.GaussianNB()
+        self.models['randomForest'] = ensemble.RandomForestClassifier()
+        self.models['extraTrees'] = ensemble.ExtraTreesClassifier()
+        self.models['gradientBoosting'] = ensemble.GradientBoostingClassifier()
 
-        self.models['xgboost'] =  XGBClassifier(max_depth=5, learning_rate=0.01, n_estimators= self.n_est, n_jobs = -1)  # , early_stopping_rounds = 5),
-        self.models['xgboost_num'] =  XGBRegressor(max_depth=5, learning_rate=0.01, n_estimators= self.n_est, n_jobs=-1,
+        self.models['xgboost'] = XGBClassifier(max_depth=5, learning_rate=0.01, n_estimators= self.n_est, n_jobs = -1)  # , early_stopping_rounds = 5),
+        self.models['xgboost_num'] = XGBRegressor(max_depth=5, learning_rate=0.01, n_estimators= self.n_est, n_jobs=-1,
                                     colsample_bytree=0.1)
-        self.models['xgboostReg'] =  XGBRegressor(max_depth=5, learning_rate=0.01,n_estimators= self.n_est,n_jobs = -1)  # , early_stopping_rounds = 5)
+        self.models['xgboostReg'] = XGBRegressor(max_depth=5, learning_rate=0.01,n_estimators= self.n_est,n_jobs = -1)  # , early_stopping_rounds = 5)
 
-        self.models['adaBoost'] =  ensemble.AdaBoostClassifier()
+        self.models['adaBoost'] = ensemble.AdaBoostClassifier()
 
-        self.models['DNN'] =  DNNVanilla(width=10, depth=1)
+        self.models['DNN'] = DNNVanilla(width=10, depth=1)
         self.models['DNN_full'] = DNNVanilla(width=10, depth=1)
 
         self.predict_only = ['xgboostReg', 'DNN']
