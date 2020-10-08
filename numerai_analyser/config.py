@@ -1,8 +1,9 @@
 import os
-import io
+import configparser
 from datetime import datetime
 import logging
 from .test_type import TestType
+from .email_manager import EmailManager
 from pathlib import Path
 
 class NumeraiConfig():
@@ -100,19 +101,37 @@ class NumeraiConfig():
 
     def readKey(self, key_loc):
 
-        file = io.open(key_loc)
+        conf_parser = configparser.ConfigParser()
+        conf_parser.read(key_loc)
 
-        output = file.read()
-        output = output.split("\n")
+        self.user = conf_parser['DEFAULT']['user']
+        self.key = conf_parser['DEFAULT']['key']
 
-        self.user = output[0]
-        self.key = output[1]
+        self.email_updates = bool(conf_parser['DEFAULT']['email_updates'])
 
-        file.close()
+        if self.email_updates:
+
+            sender_email = conf_parser['DEFAULT']['sender_email']
+            email_pass = conf_parser['DEFAULT']['email_pass']
+            receiver_email = conf_parser['DEFAULT']['receiver_email']
+
+            self.email_manager = EmailManager(sender_email= sender_email,
+                                              password = email_pass,
+                                              receiver_email = receiver_email)
+
 
 
     def shutdown(self):
         self.logger.shutdown()
+
+    def send_email(self, body = None, html = None, header = None, attachment = None):
+
+        if self.email_updates:
+            self.email_manager.send_email(body, html, header, attachment)
+            self.logger.info('Email "{}" sent'.format(header))
+
+        else:
+            self.logger.info('Email update toggled to not send')
 
 
 def setupDir(path):

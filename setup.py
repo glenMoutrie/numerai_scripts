@@ -11,7 +11,8 @@ requirements = [
 	'tensorflow',
 	'joblib',
 	'scipy',
-	'joblib'
+	'joblib',
+	'dask[distributed]'
 ]
 
 

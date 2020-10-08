@@ -74,7 +74,7 @@ class ModelTester():
 
         self.best_model = None
 
-        self.parallel = Parallel(n_jobs=7, require = 'sharedmem')
+        self.parallel = Parallel(n_jobs=-2, require = 'sharedmem')
 
 
     '''
@@ -141,7 +141,7 @@ class ModelTester():
 
             self.model_performance.loc[(self.splits_performed, era, 'ensemble')] = _metrics
 
-    
+
 
 
     def testModel(self, data, model, name):
@@ -185,7 +185,7 @@ class ModelTester():
                 ind = np.isin(data.split_index['test'], np.argwhere(data.getEraIndex(era).to_numpy()))
 
                 metrics[era] = self.model_metrics.getMetrics(data.getY(train = False, era = era).to_numpy(), results[ind], t1)
-                
+
         log = name.upper() + " METRICS:\t"
         log += "Time taken: {:.2f}".format(all_metrics['duration']) + ", "
         log += "Log loss: {:.2f}".format(all_metrics['log_loss']) + ", "

@@ -34,7 +34,7 @@ class NumeraiDataManager():
     training_data_file = 'numerai_training_data.csv'
     test_data_file = 'numerai_tournament_data.csv'
 
-    def __init__(self, config):
+    def __init__(self, config, round_num = None):
 
         self.config = config
 
@@ -42,7 +42,16 @@ class NumeraiDataManager():
         self.key = config.key
 
         self.download_loc = config.download_loc
+
         self.connect()
+
+        self.round_num = round_num
+
+
+        if round_num is None:
+            self.get_round_num()
+
+        self.sub_folder = "numerai_dataset_" + str(self.round_num)
 
 
     def getCompetitions(self):
@@ -55,6 +64,22 @@ class NumeraiDataManager():
 
         return(comps)
 
+    def get_round_num(self):
+
+        if self.connected:
+            self.round_num = self.api_conn.get_current_round()
+
+        else:
+            self.config.logger.info('Not connected to Numerai, using latest comp download')
+
+            self.round_num = get_latest_downloaded_comp(self.download_loc)
+
+            if self.round_num is None:
+                raise ValueError('No data available')
+
+            self.config.logger.info('Using data for round {}'.format(self.round_num))
+
+
     def connect(self):
 
         if self.user is not None and self.key is not None:
@@ -63,18 +88,33 @@ class NumeraiDataManager():
 
             self.connected = True
 
+    def _get_new_dataset(self, download_loc):
+        """
+        This function is seperate for unit testing purposes. Can be used in a new temporary folder where the
+        download location has no folders, this will force a new download.
+
+        :param download_loc:
+        :return:
+        """
+
+        if self.sub_folder not in os.listdir(download_loc):
+            self.api_conn.download_current_dataset(download_loc, unzip = True)
+            self.config.send_email(body = 'Successfully downloaded round {}. Now performing feature selection and model training.\nGood luck!'.format(self.round_num),
+                                   html = None, attachment = None,
+                                   header = 'New Numerai dataset downloaded')
+        else:
+            self.config.logger.info("Competion data for round " + str(self.round_num) + " already downloaded.")
+            self.config.send_email(
+                body='Running on round number {}. Now performing feature selection and model training.\nGood luck!'.format(self.round_num),
+                html=None, attachment=None,
+                header='Running Numerai on old dataset')
+
+
     def downloadLatest(self):
 
-        round_num = self.api_conn.get_current_round()
+        self._get_new_dataset(self.download_loc)
 
-        self.sub_folder = "numerai_dataset_" + str(round_num)
 
-        if not self.sub_folder in os.listdir(self.download_loc):
-            self.api_conn.download_current_dataset(self.download_loc, unzip = True)
-        else:
-            self.config.logger.info("Competion data for round " + str(round_num) + " already downloaded.")
-
-        self.sub_folder = self.sub_folder
 
     def uploadResults(self, results, name):
 
@@ -83,6 +123,11 @@ class NumeraiDataManager():
         self.config.logger.info("Writing results to " + str(file_name))
 
         results.to_csv(file_name, index = False)
+
+        self.config.send_email(
+            body='Estimation completed for numerai round {0}, predictions attached!'.format(self.round_num),
+            html= results.describe().to_html(), attachment=file_name,
+            header='Numerai predctions for round {}'.format(self.round_num))
 
         self.config.logger.info("Uploading results to Numerai")
 
@@ -172,6 +217,17 @@ def subsetDataForTesting(data, era_len = 100):
     return(pd.concat([data.loc[data.era == era][0:era_len] for era in data.era.unique()]))
 
 
+def get_latest_downloaded_comp(dataset_dir):
 
+    downloaded_comps = []
 
-    
+    for i in os.listdir(dataset_dir):
+        reg_ex = re.match('numerai_dataset_([0-9]+)$', i)
+
+        if reg_ex is not None:
+            downloaded_comps.append(int(reg_ex.group(1)))
+
+    if len(downloaded_comps) == 0:
+        return None
+    else:
+        return max(downloaded_comps)

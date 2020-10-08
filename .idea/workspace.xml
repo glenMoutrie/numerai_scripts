@@ -20,20 +20,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="13cf4be8-9dc1-4e27-8032-290e781afa55" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/rGraphicsSettings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/rSettings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/numerai_analyser/email_manager.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/numerai_analyser/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/numerai_analyser/analyser.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/analyser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/numerai_analyser/auto_cluster.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/auto_cluster.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/numerai_analyser/data_sets.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/data_sets.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/numerai_analyser/feature_selection.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/feature_selection.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/numerai_analyser/model_factory.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/model_factory.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/r_scripts/feature_select.R" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/run.py" beforeDir="false" afterPath="$PROJECT_DIR$/run.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/data_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/data_manager.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/model_cv.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/model_cv.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_unit.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_unit.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -47,29 +40,6 @@
       </list>
     </option>
   </component>
-  <component name="FindInProjectRecents">
-    <findStrings>
-      <find>self.</find>
-      <find>self.eras</find>
-      <find>self.predictions</find>
-      <find>era</find>
-      <find>features</find>
-      <find>read</find>
-      <find>calculateEn</find>
-      <find>getModelSharpe</find>
-      <find>modelsharpe</find>
-      <find>getbestmodel</find>
-      <find>getModelRank</find>
-      <find>getBestModel</find>
-      <find>all_valid_checks</find>
-      <find>print</find>
-      <find>ModelMetrics</find>
-      <find>testModel</find>
-      <find>self.models</find>
-      <find>feature_focus</find>
-      <find>valid</find>
-    </findStrings>
-  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
@@ -80,9 +50,10 @@
   </component>
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="com.intellij.ide.scratch.LRUPopupBuilder$1/New Scratch File" value="Shell Script" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
   </component>
-  <component name="RunManager" selected="Python.numerai_full_run">
+  <component name="RunManager" selected="Python.data_manager">
     <configuration name="Rebuild and test" type="BashConfigurationType" factoryName="Bash">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="INTERPRETER_PATH" value="/bin/bash" />
@@ -138,15 +109,30 @@
       <module name="numerai_scripts" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
       <option name="SDK_HOME" value="$PROJECT_DIR$/bin/python3" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/numerai_analyser/data_manager.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="email_manager" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="numerai_scripts" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="$PROJECT_DIR$/bin/python3" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/numerai_analyser/email_manager.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="true" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -222,16 +208,17 @@
       <item itemvalue="Python.numerai_full_run" />
       <item itemvalue="Python.auto_cluster" />
       <item itemvalue="Python.data_manager" />
-      <item itemvalue="Python.setup" />
       <item itemvalue="Python.numerai_dask_dataset" />
+      <item itemvalue="Python.setup" />
+      <item itemvalue="Python.email_manager" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.data_manager" />
+        <item itemvalue="Python.email_manager" />
         <item itemvalue="Python.numerai_dask_dataset" />
         <item itemvalue="Python.auto_cluster" />
         <item itemvalue="Python.numerai_dask_dataset" />
-        <item itemvalue="Python.setup" />
-        <item itemvalue="Python.data_manager" />
       </list>
     </recent_temporary>
   </component>
@@ -261,10 +248,18 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="WindowStateProjectService">
+    <state x="570" y="334" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1602081950515">
+      <screen x="0" y="0" width="1680" height="1050" />
+    </state>
+    <state x="570" y="334" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1680.1050@0.0.1680.1050" timestamp="1602081950515" />
     <state x="27" y="-1077" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1596201342004">
       <screen x="-880" y="-1440" width="2560" height="1440" />
     </state>
     <state x="27" y="-1077" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/-880.-1440.2560.1440/0.0.1680.1050@-880.-1440.2560.1440" timestamp="1596201342004" />
+    <state x="505" y="233" width="670" height="676" key="search.everywhere.popup" timestamp="1602167863279">
+      <screen x="0" y="0" width="1680" height="1050" />
+    </state>
+    <state x="505" y="233" width="670" height="676" key="search.everywhere.popup/0.0.1680.1050@0.0.1680.1050" timestamp="1602167863279" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
