@@ -35,5 +35,5 @@ from numerai_analyser.test_type import TestType
 if __name__ == "__main__":
 	# predictNumerai(True, TestType.SYNTHETIC_DATA, 2000, splits = 2)
 	# predictNumerai(True, TestType.SUBSET_DATA, 50, splits = 3)
-	predictNumerai(False, splits = 10)
+	predictNumerai(False, splits = 1)
 
