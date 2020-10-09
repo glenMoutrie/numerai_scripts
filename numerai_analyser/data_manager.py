@@ -1,7 +1,7 @@
 import os
 import numerapi as nmapi
 import pandas as pd
-
+import re
 
 from .synthetic_numerai_data import SyntheticNumeraiData
 from .test_type import TestType

@@ -1,0 +1,2 @@
+0 10 * * 6 cd ~/Documents/numerai/numerai_scripts && source ../numerai_venv/bin/activate && python check_and_run.py && deactivate
+0 10 * * 4-5 cd ~/Documents/numerai/numerai_scripts && source ../numerai_venv/bin/activate && python dry_run.py && deactivate
