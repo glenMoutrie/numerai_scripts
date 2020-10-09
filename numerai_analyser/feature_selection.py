@@ -1,63 +1,43 @@
+import os
+import pandas as pd
 from itertools import compress
-
-import rpy2.robjects as ro
-from rpy2.robjects.packages import importr
-from rpy2.robjects import pandas2ri
-from rpy2.robjects.conversion import localconverter
 
 
 class FeatureSelection:
 
-    """
-    Feature Selection using BoomSpikeSlab from R
+    def __init__(self, data, features, target, use_previous=False):
 
-    This class invokes an R instance using rpy2, and calls BoomSpikeSlab to estimate the probability that each
-    columns should be used.
-    """
-
-    def __init__(self, data, features, target):
+        self.wd = os.getcwd()
+        self.file_location = self.wd + "/.temp/num_data.csv"
+        self.output_location = self.wd + "/.temp/output"
 
         self.original_features = features
-        self.constructFormula(features, target)
-        self.output = self.runLMSpike(data)
 
-    def runLMSpike(self, data):
+        if not use_previous:
+            self.constructFormula(features, target)
+            self.writeDataToTempFile(data)
+            self.executeBayesianFeatureSelectionR()
 
-        importr('BoomSpikeSlab')
+        self.output = pd.read_csv(self.output_location)
 
-        with localconverter(ro.default_converter + pandas2ri.converter):
-            r_df = ro.conversion.py2rpy(data)
+    def executeBayesianFeatureSelectionR(self):
 
-        ro.r("""
-        getProbabilities <- function(form, data) {
-    
-            form <- formula(form)
-    
-            mm <- model.matrix(form, data)
-            resp <- model.response(model.frame(form, data))
-    
-            model <- lm.spike(form, niter=500, data)
-            output <- colMeans(model$beta != 0)
-    
-            output <- data.frame(variable=names(output), probability=output)
-    
-            output
-    
-        }
-        """)
+        command = "Rscript r_scripts/feature_select.R"
+        command += " " + self.file_location + " "
+        command += " " + self.formula + " "
+        command += " " + self.output_location
 
-        results = ro.globalenv['getProbabilities'](self.formula, r_df)
+        os.system(command)
 
-        with localconverter(ro.default_converter + pandas2ri.converter):
-            results = ro.conversion.rpy2py(results)
+    def writeDataToTempFile(self, data):
+        if not ".temp" in os.listdir():
+            os.mkdir(".temp")
 
-        results = results.reset_index(drop=True)
-
-        return (results)
+        data.to_csv(self.file_location, index=False)
 
     def constructFormula(self, features, target):
 
-        formula = target + " ~ "
+        formula = "'" + target + " ~ "
         n = len(features)
 
         for i in range(0, n):
@@ -65,6 +45,7 @@ class FeatureSelection:
             if not i == (n - 1):
                 formula += " + "
 
+        formula += "'"
         self.formula = formula
 
     def selectBestFeatures(self, min_include, exclude_intercept=True):
@@ -85,3 +66,14 @@ class FeatureSelection:
         self.best_vars = best_vars
 
         return (self.best_vars)
+
+
+if __name__ == "__main__":
+    test = pd.DataFrame({"one": [1, 2, 3], "two": [4, 5, 6], "pred": [0, 0, 1]})
+    fs = FeatureSelection(test, ["one", "two"], "pred")
+
+    print(fs.output)
+    print(fs.output.iloc[[1], [0]])
+    print(fs.selectBestFeatures(0.1))
+    # fs.getFeatures()
+    # fs.getInclusionProbability()

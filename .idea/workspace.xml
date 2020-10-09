@@ -20,9 +20,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="13cf4be8-9dc1-4e27-8032-290e781afa55" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/check_and_run.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/numerai_analyser/data_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/data_manager.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cron_tab.txt" beforeDir="false" afterPath="$PROJECT_DIR$/cron_tab.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/feature_selection.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/feature_selection.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/setup" beforeDir="false" afterPath="$PROJECT_DIR$/setup" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -33,6 +34,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Python Script" />
+        <option value="R Script" />
       </list>
     </option>
   </component>

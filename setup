@@ -95,6 +95,7 @@ sudo ln -s /opt/R/${R_VERSION}/bin/R /usr/local/bin/R
 #sudo apt-get install r-base-dev
 
 sudo R --slave -e 'install.packages("BoomSpikeSlab", repos="http://cran.us.r-project.org")'
+sudo R --slave -e 'install.packages("data.table", repos="http://cran.us.r-project.org")'
 
 python3.8 -m venv numerai_venv
 source numerai_venv/bin/activate
