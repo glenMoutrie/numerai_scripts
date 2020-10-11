@@ -5,6 +5,7 @@ import logging
 from .test_type import TestType
 from .email_manager import EmailManager
 from pathlib import Path
+import psutil
 
 class NumeraiConfig():
 
@@ -25,6 +26,8 @@ class NumeraiConfig():
         self.user = None
 
         self.key = None
+
+        self.n_cores = psutil.cpu_count(False)
 
         if test_run:
 

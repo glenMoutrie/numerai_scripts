@@ -38,7 +38,7 @@ class ModelFactory:
         self.predict_only = ['xgboostReg', 'DNN']
         self.use_all_features = ['xgboost_num', 'DNN_full']
 
-    def cross_validate_model_params(self, data, splits = 10):
+    def cross_validate_model_params(self, data, splits = 10, n_cores = -1):
 
         parameters = {'n_estimators': stats.randint(150, 500),
                       'learning_rate': stats.uniform(0.01, 0.07),
@@ -50,7 +50,7 @@ class ModelFactory:
 
         cv = ShuffleSplit(n_splits=splits)
 
-        gscv = RandomizedSearchCV(XGBRegressor(), param_distributions=parameters, n_jobs=7,
+        gscv = RandomizedSearchCV(XGBRegressor(), param_distributions=parameters, n_jobs=n_cores,
                                   scoring=metrics.make_scorer(metrics.mean_absolute_error),
                                   cv=cv, verbose=5, return_train_score=True)
 

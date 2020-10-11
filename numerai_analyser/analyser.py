@@ -50,7 +50,7 @@ Now running paramter cross validation.""".format(dl.round_num, comp)
 
             mf = ModelFactory(n_est)
 
-            mf.cross_validate_model_params(train, cv_splits)
+            mf.cross_validate_model_params(train, cv_splits, n_cores = config.n_cores)
 
             email_body = """Model parameterization completed for round {0} competition {1}.
 Now running model testing over {2} splits.""".format(dl.round_num, comp, splits)
@@ -86,6 +86,16 @@ Now running model testing over {2} splits.""".format(dl.round_num, comp, splits)
                     config.logger.error(error)
 
             config.logger.info("Complete.")
+
+    except:
+        email_body = """The run has reached hit an error for round {0}\n{1}""".format(dl.round_num,
+                                                                                   sys.exc_info()[0])
+        email_title = 'Numerai Round {0} error'.format(dl.round_num)
+
+        config.send_email(body=email_body,
+                          html=None,
+                          attachment=None,
+                          header=email_title)
 
     finally:
 

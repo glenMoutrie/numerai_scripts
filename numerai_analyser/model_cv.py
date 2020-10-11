@@ -74,7 +74,7 @@ class ModelTester():
 
         self.best_model = None
 
-        self.parallel = Parallel(n_jobs=-2, require = 'sharedmem')
+        self.parallel = Parallel(n_jobs=config.n_cores, require = 'sharedmem')
 
 
     '''
