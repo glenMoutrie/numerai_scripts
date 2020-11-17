@@ -12,7 +12,9 @@ requirements = [
 	'joblib',
 	'scipy',
 	'joblib',
-	'dask[distributed]'
+	'dask[distributed]',
+	'psutil',
+	'distributed'
 ]
 
 

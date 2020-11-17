@@ -4,3 +4,11 @@ numpy
 xgboost
 numerapi
 dask
+rpy2
+tensorflow
+joblib
+scipy
+joblib
+dask[distributed]
+psutil
+distributed

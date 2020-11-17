@@ -38,9 +38,6 @@ class DNNVanilla(BaseEstimator):
 
         return(output)
 
-    def get_params(self, deep=True):
-
-        return {'width': self.width, 'depth': self.depth, 'activation': self.activation, 'metrics' : self.metrics}
 
 
 
