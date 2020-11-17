@@ -45,7 +45,8 @@ class SyntheticNumeraiData():
 			train[f] = [random.normalvariate(0,1) for i in range(0,self.observations)]
 
 		for c in self.comp:
-			col_name = 'target_' + c
+			# col_name = 'target_' + c
+			col_name = 'target'
 			train[col_name] = [random.randint(0,1) for i in range(0, self.observations)]
 
 		self.train = train
@@ -64,8 +65,9 @@ class SyntheticNumeraiData():
 			test[f] = [random.choice([0,0.25,0.5,0.75,1]) for i in range(0,self.observations)]
 
 		for c in self.comp:
-			col_name = 'target_' + c
-			test[col_name] = [random.choice([0,0.25,0.5,0.75,1]) for i in range(0, test_obs)] + [None for i in range(0, valid_obs + live_obs)]
+			# col_name = 'target_' + c
+			col_name = 'target'
+			test[col_name] = [random.choice([0,0.25,0.5,0.75,1]) for i in range(0, test_obs + valid_obs)] + [None for i in range(0, live_obs)]
 
 		self.test = test
 

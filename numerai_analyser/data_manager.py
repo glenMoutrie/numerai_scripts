@@ -158,20 +158,29 @@ class NumeraiDataManager():
                 self.train = subsetDataForTesting(self.train, self.config.test_size)
                 self.test = subsetDataForTesting(self.test, self.config.test_size)
 
-    def _getData(self, competition_type, polynomial, reduce_features):
+    def _getData(self, competition_type, polynomial, reduce_features, estimate_clusters):
 
-        self.train = TrainSet(config = self.config, data = self.train, 
-            competition_type = competition_type, polynomial = polynomial,
-            reduce_features = reduce_features, test = self.config.test_run)
+        params = {'config' : self.config,
+                  'competition_type' : competition_type,
+                  'polynomial' : polynomial,
+                  'estimate_clusters' : estimate_clusters}
 
-        self.test = TestSet(config = self.config, data = self.test, 
-            competition_type = competition_type, era_cat = self.train.getEras(unique_eras=True),
-            numeric_features = self.train.numeric_features, cluster_model = self.train.cluster_model, 
-            clusters = self.train.clusters, polynomial = polynomial)
+        train_params = {'data': self.train,
+                        'reduce_features' : reduce_features,
+                        'test': self.config.test_run}
+
+        self.train = TrainSet(**{**params, **train_params})
+
+        test_params = {'data' : self.test,
+                       'numeric_features' : self.train.numeric_features,
+                       'cluster_model' : self.train.cluster_model,
+                       'clusters': self.train.clusters}
+
+        self.test = TestSet(**{**params, **test_params})
 
         return self.train, self.test
 
-    def getData(self, competition_type = None, polynomial = False, reduce_features = False):
+    def getData(self, competition_type = None, polynomial = False, reduce_features = False, estimate_clusters = False):
 
         """
         Gets the numerai train and test data sets, either generating the synthetic test data or
@@ -184,7 +193,9 @@ class NumeraiDataManager():
 
         :param reduce_features: Boolean indicator stating if you want to reduce the feature space
 
-        :return: A tuple, first is a TrainData object, secod is a TestData object
+        :param estimate_clusters: Boolean indicator stating if you want to add a clustering feature
+
+        :return: A tuple, first is a TrainData object, second is a TestData object
         """
 
         if competition_type is None:
@@ -208,7 +219,7 @@ class NumeraiDataManager():
 
         self.read()
 
-        return self._getData(competition_type, polynomial, reduce_features)
+        return self._getData(competition_type, polynomial, reduce_features, estimate_clusters)
         
 def subsetDataForTesting(data, era_len = 100):
 

@@ -2,8 +2,8 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 import pandas as pd
 import numpy as np
-# import umap
-# from apricot import FeatureBasedSelection
+import umap
+from apricot import FacilityLocationSelection
 
 import joblib
 from dask.distributed import Client, progress
@@ -28,9 +28,11 @@ class ClusterFeature:
         self.reducer = umap.UMAP(components)
 
 
-        if reduce_dim:
-            self.reduceDimensionsModelFit(data)
+        # if reduce_dim:
+        #     print('Applying Apricot')
+        #     self.reduceDimensionsModelFit(data)
 
+        print('Estimating using kmeans')
         self.estimateCenters(data)
 
 
@@ -45,7 +47,7 @@ class ClusterFeature:
 
         if n > 1000:
 
-            sampler = FeatureBasedSelection(500)
+            sampler = FacilityLocationSelection(500, metric='euclidean', optimizer='lazy')
 
             data = sampler.fit_transform(data.to_numpy())
 
@@ -65,13 +67,13 @@ class ClusterFeature:
 
     def estimateCenters(self, data):
 
-        if self.reduce_dim:
-            data = self.reduceDimensions(data)
+        # if self.reduce_dim:
+        #     data = self.reduceDimensions(data)
 
         if self.clusters is None:
 
-            with joblib.parallel_backend('dask'):
-            # if True: # catch to undo parallelsation if needed for debugging
+            # with joblib.parallel_backend('dask'):
+            if True: # catch to undo parallelsation if needed for debugging
 
                 self.models = [KMeans(n_clusters = i) for i in range(self.min_cluster, self.max_cluster + 1)]
 
@@ -106,8 +108,8 @@ class ClusterFeature:
 
     def assignClusters(self, data):
 
-        if self.reduce_dim:
-            data = self.reduceDimensions(data)
+        # if self.reduce_dim:
+        #     data = self.reduceDimensions(data)
 
         return self.cluster_model.predict(data)
 

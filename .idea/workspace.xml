@@ -20,8 +20,25 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="13cf4be8-9dc1-4e27-8032-290e781afa55" name="Default" comment="">
+      <change afterPath="$PROJECT_DIR$/numerai_analyser/neutralize_normalize.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pipfreeze.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dry_run.py" beforeDir="false" afterPath="$PROJECT_DIR$/dry_run.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser.egg-info/requires.txt" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser.egg-info/requires.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/DNN.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/DNN.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/analyser.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/analyser.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/auto_cluster.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/auto_cluster.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/data_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/data_manager.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/data_sets.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/data_sets.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/model_cv.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/model_cv.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/model_factory.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/model_factory.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/model_metrics.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/model_metrics.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/synthetic_numerai_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/synthetic_numerai_data.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/run.py" beforeDir="false" afterPath="$PROJECT_DIR$/run.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,8 +48,8 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Python Script" />
         <option value="R Script" />
+        <option value="Python Script" />
       </list>
     </option>
   </component>
@@ -40,6 +57,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectId" id="1fE3rxFz3C2M0CL8DmRX14YhXbh" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -49,7 +67,7 @@
     <property name="com.intellij.ide.scratch.LRUPopupBuilder$1/New Scratch File" value="Shell Script" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
   </component>
-  <component name="RunManager" selected="Python.check_and_run">
+  <component name="RunManager" selected="Python.auto_cluster">
     <configuration name="Rebuild and test" type="BashConfigurationType" factoryName="Bash">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="INTERPRETER_PATH" value="/bin/bash" />
@@ -216,11 +234,11 @@
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.auto_cluster" />
         <item itemvalue="Python.check_and_run" />
         <item itemvalue="Python.data_manager" />
         <item itemvalue="Python.email_manager" />
         <item itemvalue="Python.numerai_dask_dataset" />
-        <item itemvalue="Python.auto_cluster" />
       </list>
     </recent_temporary>
   </component>
@@ -250,14 +268,14 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="570" y="334" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1602081950515">
+    <state x="570" y="334" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1603627339134">
       <screen x="0" y="0" width="1680" height="1050" />
     </state>
-    <state x="570" y="334" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1680.1050@0.0.1680.1050" timestamp="1602081950515" />
-    <state x="27" y="-1077" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1596201342004">
-      <screen x="-880" y="-1440" width="2560" height="1440" />
+    <state x="570" y="334" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1680.1050@0.0.1680.1050" timestamp="1603627339134" />
+    <state x="628" y="446" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1605524393253">
+      <screen x="0" y="0" width="1680" height="1050" />
     </state>
-    <state x="27" y="-1077" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/-880.-1440.2560.1440/0.0.1680.1050@-880.-1440.2560.1440" timestamp="1596201342004" />
+    <state x="628" y="446" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1680.1050@0.0.1680.1050" timestamp="1605524393253" />
     <state x="505" y="233" width="670" height="676" key="search.everywhere.popup" timestamp="1602167863279">
       <screen x="0" y="0" width="1680" height="1050" />
     </state>

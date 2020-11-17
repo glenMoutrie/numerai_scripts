@@ -9,7 +9,8 @@ import psutil
 
 class NumeraiConfig():
 
-    def __init__(self, test_run = True, test_type = TestType.SYNTHETIC_DATA, test_size = 100, save_log_file = False, key_loc = None):
+    def __init__(self, test_run = True, test_type = TestType.SYNTHETIC_DATA, test_size = 100, save_log_file = False,
+                 key_loc = None, email_updates = True):
 
         self.start_time = datetime.now()
 
@@ -23,11 +24,15 @@ class NumeraiConfig():
 
         self.key_loc = key_loc
 
+        self.email_updates = email_updates
+
         self.user = None
 
         self.key = None
 
         self.n_cores = psutil.cpu_count(False)
+
+        os.environ["OMP_NUM_THREADS"] = str(self.n_cores)
 
         if test_run:
 
@@ -65,8 +70,6 @@ class NumeraiConfig():
 
         else:
             self.key_loc = None
-
-        os.environ["OMP_NUM_THREADS"] = "8"
 
         if self.test_run:
 
@@ -110,7 +113,7 @@ class NumeraiConfig():
         self.user = conf_parser['DEFAULT']['user']
         self.key = conf_parser['DEFAULT']['key']
 
-        self.email_updates = bool(conf_parser['DEFAULT']['email_updates'])
+        self.email_updates = bool(conf_parser['DEFAULT']['email_updates']) & self.email_updates
 
         if self.email_updates:
 

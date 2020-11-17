@@ -14,6 +14,7 @@ bin/*
 lib/*
 pyvenv.cfg
 include/*
+numerai_venv/*
 
 __pycache__
 numerai_analyser/__pycache__

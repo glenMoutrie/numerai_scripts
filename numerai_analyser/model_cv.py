@@ -1,55 +1,32 @@
 import pandas as pd
 import numpy as np
-import scipy as sp
 
 from joblib import Parallel, delayed
-from sklearn import clone
 
 from sklearn.model_selection import ShuffleSplit
 
 import time
 
 from .model_metrics import ModelMetrics
+from .neutralize_normalize import auto_neutralize_normalize
+
+import traceback
+import warnings
+import sys
 
 
-def _neutralize(df, columns, by, proportion=1.0):
+# def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
+#
+#     log = file if hasattr(file,'write') else sys.stderr
+#     traceback.print_stack(file=log)
+#     log.write(warnings.formatwarning(message, category, filename, lineno, line))
+#
+# warnings.showwarning = warn_with_traceback
 
-    scores = df[columns]
-    exposures = df[by].values
-    scores = scores - proportion * exposures.dot(np.linalg.pinv(exposures).dot(scores))
-
-    scores = scores / scores.std()
-
-    scores[scores < 0] = 0
-    scores[scores > 1] = 1
-
-    return scores
-    
-def _normalize(df):
-    X = (df.rank(method="first") - 0.5) / len(df)
-    return sp.stats.norm.ppf(X)
-
-def _normalize_and_neutralize(df, columns, by, proportion=1.0):
-    # Convert the scores to a normal distribution
-    df[columns] = _normalize(df[columns])
-    df[columns] = _neutralize(df, columns, by, proportion)
-    return df[columns]
-
-def normalizeAndNeutralize(predictions, test, proportion = 1.0):
-
-    X = test.getX(data_type = None, all_features = True)
-
-    output = X\
-    .assign(PREDS = predictions,
-        ERA = test.full_set.era)\
-    .groupby('ERA')\
-    .apply(lambda x: _normalize_and_neutralize(x, ["PREDS"], test.all_features))['PREDS']
-
-    return output
 
 class ModelTester():
 
-    def __init__(self, model_factory, eras, config, splits = 5, test_size = 0.25) :
+    def __init__(self, model_factory, eras, config, splits=5, test_size=0.25):
 
         self.config = config
 
@@ -63,19 +40,17 @@ class ModelTester():
         self.all_ranks = []
         self.all_valid_checks = []
 
-        self.ss = ShuffleSplit(n_splits = splits, test_size = test_size)
+        self.ss = ShuffleSplit(n_splits=splits, test_size=test_size)
 
-        index = [(i, j, k) for i in range(1, splits + 1) for j in self.eras for k in (list(self.model_factory.models.keys()) + ['ensemble'])]
-        index = pd.MultiIndex.from_tuples(index, names = ['split', 'era', 'model'])
+        index = [(i, j, k) for i in range(1, splits + 1) for j in self.eras for k in
+                 (list(self.model_factory.models.keys()) + ['ensemble'])]
+        index = pd.MultiIndex.from_tuples(index, names=['split', 'era', 'model'])
 
-        self.model_metrics = ModelMetrics()
-
-        self.model_performance = pd.DataFrame(columns = self.model_metrics.measures, index = index, dtype = np.float)
+        self.model_performance = pd.DataFrame(columns=ModelMetrics.measures, index=index, dtype=np.float)
 
         self.best_model = None
 
         self.parallel = Parallel(n_jobs=config.n_cores, require = 'sharedmem')
-
 
     '''
     The functions below are all for testing and training on the specified number of splits
@@ -84,34 +59,31 @@ class ModelTester():
     def testAllSplits(self, data):
 
         for train_i, test_i in self.ss.split(data.getX()):
-
             self.config.logger.info("TESTING SPLIT: " + str(self.splits_performed))
 
             data.updateSplit(train_i, test_i)
             self.splits_performed += 1
 
-            self.testAllModels(data,  self.model_factory.models)
+            self.testAllModels(data, self.model_factory.models)
 
         self.all_ranks = pd.concat(self.all_ranks)
         self.all_valid_checks = pd.concat(self.all_valid_checks)
 
     def testAllModels(self, data, models):
 
-        self.predictions = pd.DataFrame(columns = ['era'] + list(models.keys()) + ['ensemble'],
-            index = data.split_index['test'])
+        self.predictions = pd.DataFrame(columns=['era'] + list(models.keys()) + ['ensemble'],
+                                        index=data.full_set[data.full_set.data_type == 'test'].index)
 
-        self.predictions['era'] = data.full_set.iloc[data.split_index['test']].era.to_numpy()
+        self.predictions['era'] = data.full_set[data.full_set.data_type == 'test'].era.to_numpy()
 
-        # mp_update = {model: self.testModel(data, models.get(model), model) for model in models.keys()}
-
-        mp_update = self.parallel(delayed(self.testModelThreadSafe)(data, clone(models.get(model)), model)
+        mp_update = self.parallel(delayed(self.testModel)(data, model)
                                   for model in models.keys() if not model.startswith('DNN'))
 
-        mp_update = {i[1]: i[0] for i in mp_update}
+        # Keras models can't be compiled in parallel
+        mp_update = mp_update + [self.testModel(data, model)
+                                 for model in models.keys() if model.startswith('DNN')]
 
-        # Keras model compilation appears not to be thread safe
-        mp_update.update({model: self.testModel(data, models.get(model), model)
-                     for model in models.keys() if model.startswith('DNN')})
+        mp_update = {i[1]: i[0] for i in mp_update}
 
         for update in mp_update.keys():
             for era in self.eras:
@@ -123,28 +95,24 @@ class ModelTester():
 
         self.predictions.astype(dict(zip(list(models.keys()) + ['ensemble'], ['float64'])))
 
-        
-
         for era in self.eras:
 
             if era == 'all':
-                
-                _metrics = self.model_metrics.getMetrics(observed = data.getY(False).to_numpy(),
-                    results = self.predictions['ensemble'].to_numpy(),
-                    t1 = np.nan)
+
+                _metrics = ModelMetrics.getMetrics(observed=data.getY(data_type='test').to_numpy(),
+                                                   results=self.predictions['ensemble'].to_numpy(),
+                                                   t1=np.nan)
 
             else:
 
-                _metrics = self.model_metrics.getMetrics(observed = data.getY(False, era).to_numpy(), 
-                results = self.predictions.loc[self.predictions.era == era, 'ensemble'].to_numpy(), 
-                t1 = np.nan)
+                _metrics = ModelMetrics.getMetrics(observed=data.getY(data_type='test', era=era).to_numpy(),
+                                                   results=self.predictions.loc[
+                                                       self.predictions.era == era, 'ensemble'].to_numpy(),
+                                                   t1=np.nan)
 
             self.model_performance.loc[(self.splits_performed, era, 'ensemble')] = _metrics
 
-
-
-
-    def testModel(self, data, model, name):
+    def testModel(self, data, name):
         '''
         Tests an individual model, collecting performance metrics by era.
         '''
@@ -153,73 +121,8 @@ class ModelTester():
 
         self.config.logger.info("TESTING " + name.upper() + "")
 
-        if name in self.model_factory.predict_only:
-
-            model.fit(data.getX(train = True), data.getY(train = True))
-            results = model.predict(data.getX(train = False))
-
-        elif name in self.model_factory.use_all_features:
-
-            model.fit(data.getX(train = True, all_features = True), data.getY(True))
-            results = model.predict(data.getX(train = False, all_features = True))
-
-        else:
-
-            model.fit(data.getX(train = True), data.getY(train = True).round())
-            y_prediction = model.predict_proba(data.getX(train = False))
-            results = y_prediction[:, 1]
-
-        self.predictions[name] = results
-
-        metrics = {}
-
-        for era in self.eras:
-
-
-            if era == 'all':
-                all_metrics = self.model_metrics.getMetrics(data.getY(train = False).to_numpy(),  results, t1)
-                metrics[era] = all_metrics
-
-            else:
-
-                ind = np.isin(data.split_index['test'], np.argwhere(data.getEraIndex(era).to_numpy()))
-
-                metrics[era] = self.model_metrics.getMetrics(data.getY(train = False, era = era).to_numpy(), results[ind], t1)
-
-        log = name.upper() + " METRICS:\t"
-        log += "Time taken: {:.2f}".format(all_metrics['duration']) + ", "
-        log += "Log loss: {:.2f}".format(all_metrics['log_loss']) + ", "
-        log += "Precision: {:.2f}".format(all_metrics['precision']) + ", "
-        log += "Recall: {:.2f}".format(all_metrics['recall'])
-
-        self.config.logger.info(log)
-
-        return metrics
-
-    def testModelThreadSafe(self, data, model, name):
-        '''
-        Tests an individual model, collecting performance metrics by era.
-        '''
-
-        t1 = time.time()
-
-        self.config.logger.info("TESTING " + name.upper() + "")
-
-        if name in self.model_factory.predict_only:
-
-            model.fit(data.getX(train=True), data.getY(train=True))
-            results = model.predict(data.getX(train=False))
-
-        elif name in self.model_factory.use_all_features:
-
-            model.fit(data.getX(train=True, all_features=True), data.getY(True))
-            results = model.predict(data.getX(train=False, all_features=True))
-
-        else:
-
-            model.fit(data.getX(train=True), data.getY(train=True).round())
-            y_prediction = model.predict_proba(data.getX(train=False))
-            results = y_prediction[:, 1]
+        results = self.model_factory.estimate_model(model_name=name, train_data=data, test_data=None,
+                                                           data_type_train='train', data_type_test='test')
 
         self.predictions[name] = results
 
@@ -228,15 +131,14 @@ class ModelTester():
         for era in self.eras:
 
             if era == 'all':
-                all_metrics = self.model_metrics.getMetrics(data.getY(train=False).to_numpy(), results, t1)
+                all_metrics = ModelMetrics.getMetrics(data.getY(data_type='test').to_numpy(), results, t1)
                 metrics[era] = all_metrics
 
             else:
 
-                ind = np.isin(data.split_index['test'], np.argwhere(data.getEraIndex(era).to_numpy()))
+                ind = data.full_set[data.full_set.data_type == 'test'].era == era
 
-                metrics[era] = self.model_metrics.getMetrics(data.getY(train=False, era=era).to_numpy(), results[ind],
-                                                             t1)
+                metrics[era] = ModelMetrics.getMetrics(data.getY(data_type='test', era=era).to_numpy(), results[ind], t1)
 
         log = name.upper() + " METRICS:\t"
         log += "Time taken: {:.2f}".format(all_metrics['duration']) + ", "
@@ -247,7 +149,6 @@ class ModelTester():
         self.config.logger.info(log)
 
         return metrics, name
-
 
     def getBestModel(self):
 
@@ -273,84 +174,66 @@ class ModelTester():
 
         return self.best_model
 
-
     def getModelRank(self, model_performance):
 
-        return model_performance\
-            .assign(log_loss = lambda x: x.log_loss * -1)\
-            .groupby('model')\
-            .apply(lambda x: x[self.model_metrics.target_measures].agg('mean'))\
-            .apply(lambda x: x.rank(pct = True, method = 'first'))\
-            .apply(lambda x: x.mean(), axis = 1)
+        return model_performance \
+            .assign(log_loss=lambda x: x.log_loss * -1) \
+            .groupby('model') \
+            .apply(lambda x: x[ModelMetrics.target_measures].agg('mean')) \
+            .apply(lambda x: x.rank(pct=True, method='first')) \
+            .apply(lambda x: x.mean(), axis=1)
 
     def getModelSharpe(self, model_performance):
 
-        cov_mean = model_performance\
-        .groupby(['model'])\
-        .apply(lambda x: x.num_cov.mean())
+        cov_mean = model_performance \
+            .groupby(['model']) \
+            .apply(lambda x: x.num_cov.mean())
 
-        cov_sd = model_performance\
-        .groupby(['model'])\
-        .apply(lambda x: x.num_cov.std())
+        cov_sd = model_performance \
+            .groupby(['model']) \
+            .apply(lambda x: x.num_cov.std())
 
-        return cov_mean/cov_sd
-
+        return cov_mean / cov_sd
 
     def getBestPrediction(self, train_data, test_data):
 
         name = self.getBestModel()
 
-        if name in self.model_factory.predict_only:
-
-            model = self.model_factory.models[name]
-
-            model.fit(train_data.getX(), train_data.getY())
-            output = model.predict(test_data.getX())
-
-        elif name == 'ensemble':
+        if name == 'ensemble':
 
             output = self.ensemblePrediction(train_data, test_data)
 
-        elif name in self.model_factory.use_all_features:
-
-            model = self.model_factory.models[name]
-
-            model.fit(train_data.getX(train = None, all_features = True), train_data.getY())
-            output = model.predict(test_data.getX(data_type = None, all_features = True))
-
         else:
 
-            model = self.model_factory.models[name]
+            output = self.model_factory.estimate_model(model_name=name, train_data=train_data, test_data=test_data)
 
-            model.fit(train_data.getX(), train_data.getY().round())
-            y_prediction = model.predict_proba(test_data.getX())
-            output = y_prediction[:, 1]
 
-        metrics_orig = self.model_metrics.getNumeraiScoreByEra(test_data.getY(), output, test_data.getEras())
+        metrics_orig = ModelMetrics.getNumeraiScoreByEra(test_data.getY(data_type = 'validation'),
+                                                               output.loc[test_data.full_set.data_type == 'validation'],
+                                                               test_data.getEras())
 
-        self.config.logger.info("Neutralizing predictions")
-        output = normalizeAndNeutralize(output, test_data, 0.5)
+        output = auto_neutralize_normalize(output, test_data, self.config.n_cores, self.config.logger)
 
         self.config.logger.info("Predictions summary statistics:")
         self.config.logger.info(str(output.describe()))
 
-        metrics_normalized = self.model_metrics.getNumeraiScoreByEra(test_data.getY(), output, test_data.getEras())
+        metrics_normalized = ModelMetrics.getNumeraiScoreByEra(test_data.getY(data_type = 'validation'),
+                                                               output.loc[test_data.full_set.data_type == 'validation'],
+                                                               test_data.getEras())
 
         self.config.logger.info("Original Numerai Score:")
-        self.config.logger.info("Validation Correlation: {0}\nValidation Sharpe: {1}"\
-                                  .format(metrics_orig['correlation'], metrics_orig['sharpe']))
+        self.config.logger.info("Validation Correlation: {0}\nValidation Sharpe: {1}" \
+                                .format(metrics_orig['correlation'], metrics_orig['sharpe']))
 
         self.config.logger.info("Neutralized Numerai Score:")
         self.config.logger.info("Validation Correlation: {0}\nValidation Sharpe: {1}" \
-                                  .format(metrics_normalized['correlation'], metrics_normalized['sharpe']))
+                                .format(metrics_normalized['correlation'], metrics_normalized['sharpe']))
 
         return output
-
 
     def logMetrics(self):
 
         self.model_performance.to_csv(self.config.metric_loc_file)
-
 
     '''
 
@@ -360,35 +243,34 @@ class ModelTester():
 
     As it would be costly to estimate all of the models each time this uses the predictions that have been already made on 
     that test/split.
-    
+
     '''
 
     def weightedAveragePreds(self, weights, predictions):
 
         weights = weights.fillna(0)
 
-        output = predictions[weights.index.to_list()]\
-        .apply(lambda x: np.average(x, weights = weights), axis = 1)
+        output = predictions[weights.index.to_list()] \
+            .apply(lambda x: np.average(x, weights=weights), axis=1)
 
         return output
-
 
     def calculateEnsemblePredictions(self):
 
         index = self.model_performance.index.get_level_values('split') == self.splits_performed
         index = index & (self.model_performance.index.get_level_values('model') != 'ensemble')
 
-        rank = self.model_performance\
-        .loc[index]\
-        .groupby('era')\
-        .apply(self.getModelRank)
+        rank = self.model_performance \
+            .loc[index] \
+            .groupby('era') \
+            .apply(self.getModelRank)
 
-        viable = self.model_performance\
-        .loc[index]\
-        .groupby(['era', 'model'])\
-        .apply(lambda x: x.num_cov.mean() > 0)\
-        .rename('viable')\
-        .reset_index()
+        viable = self.model_performance \
+            .loc[index] \
+            .groupby(['era', 'model']) \
+            .apply(lambda x: x.num_cov.mean() > 0) \
+            .rename('viable') \
+            .reset_index()
 
         self.all_ranks.append(rank)
         self.all_valid_checks.append(viable)
@@ -398,31 +280,30 @@ class ModelTester():
             if viable[viable.era == i]['viable'].any():
 
                 viable_ranks = rank.loc[i][viable.loc[(viable.era == i) & (viable['viable'])].model]
-                self.predictions.loc[self.predictions.era == i, 'ensemble'] = self.weightedAveragePreds(viable_ranks, self.predictions.loc[self.predictions.era == i])
+                self.predictions.loc[self.predictions.era == i, 'ensemble'] = self.weightedAveragePreds(viable_ranks,
+                                                                                                        self.predictions.loc[
+                                                                                                            self.predictions.era == i])
 
             else:
 
-                _best_model = rank.loc[i].idxmax(axis = 1)
+                _best_model = rank.loc[i].idxmax(axis=1)
 
                 if str(_best_model) == 'nan':
+                    _best_model = rank.loc['all'].idxmax(axis=1)
 
-                    _best_model = rank.loc['all'].idxmax(axis = 1)
-
-                self.predictions.loc[self.predictions.era == i, 'ensemble'] = self.predictions.loc[self.predictions.era == i, _best_model]
+                self.predictions.loc[self.predictions.era == i, 'ensemble'] = self.predictions.loc[
+                    self.predictions.era == i, _best_model]
 
         rank['split'] = self.splits_performed
         viable['split'] = self.splits_performed
-    
 
     def ensemblePrediction(self, train, test):
 
-        test_eras = test.full_set.era.unique()
-
-        erax_validity = self.all_valid_checks\
-        .astype({'viable':'int32'})\
-        .groupby('model')['viable']\
-        .agg('mean')\
-        .apply(lambda x: x >= 0.2)
+        erax_validity = self.all_valid_checks \
+            .astype({'viable': 'int32'}) \
+            .groupby('model')['viable'] \
+            .agg('mean') \
+            .apply(lambda x: x >= 0.2)
 
         models = erax_validity[erax_validity].index.tolist()
 
@@ -438,35 +319,13 @@ class ModelTester():
 
         weights = self.all_ranks[list(models)].agg(np.nanmean)
 
-        predictions = pd.DataFrame(columns = models, index = [i for i in range(test.N)])
-
+        predictions = pd.DataFrame(columns=models, index=[i for i in range(test.N)])
 
         for i in models:
-
             self.config.logger.info('TRAINING ' + i.upper())
 
-            model = self.model_factory.models[i]
-
-            if i in self.model_factory.predict_only:
-
-                model.fit(train.getX(), train.getY())
-                results = model.predict(test.getX())
-
-            elif i in self.model_factory.use_all_features:
-
-                model = self.model_factory.models[i]
-
-                model.fit(train.getX(train = None, all_features = True), train.getY())
-                results = model.predict(test.getX(data_type = None, all_features = True))
-
-            else:
-
-                model.fit(train.getX(), train.getY().round())
-                y_prediction = model.predict_proba(test.getX())
-                results = y_prediction[:, 1]
-
-            predictions[i] = results
+            predictions[i] = self.model_factory.estimate_model(model_name=i, train_data=train, test_data=test)
 
         output = self.weightedAveragePreds(weights, predictions)
 
-        return(output)
+        return (output)
