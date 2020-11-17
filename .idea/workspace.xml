@@ -19,7 +19,9 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="13cf4be8-9dc1-4e27-8032-290e781afa55" name="Default" comment="" />
+    <list default="true" id="13cf4be8-9dc1-4e27-8032-290e781afa55" name="Default" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -82,6 +84,9 @@
       <module name="numerai_scripts" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
       <option name="SDK_HOME" value="$PROJECT_DIR$/bin/python3" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="true" />
@@ -202,12 +207,12 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.numerai_full_run" />
       <item itemvalue="Python.auto_cluster" />
       <item itemvalue="Python.check_and_run" />
       <item itemvalue="Python.data_manager" />
       <item itemvalue="Python.email_manager" />
       <item itemvalue="Python.numerai_dask_dataset" />
+      <item itemvalue="Python.numerai_full_run" />
     </list>
     <recent_temporary>
       <list>
