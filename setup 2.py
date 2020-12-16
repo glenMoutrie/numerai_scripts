@@ -14,15 +14,13 @@ requirements = [
 	'joblib',
 	'dask[distributed]',
 	'psutil',
-	'distributed',
-	'umap-learn',
-	'apricot-select'
+	'distributed'
 ]
 
 
 setup(
 	name='numerai_analyser',
-	version='0.2',
+	version='0.1',
 	description='Automatic predictions for numerai',
 	author='Glen Moutrie',
 	install_requires=requirements

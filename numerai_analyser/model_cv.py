@@ -105,6 +105,8 @@ class ModelTester():
 
             else:
 
+
+
                 _metrics = ModelMetrics.getMetrics(observed=data.getY(data_type='test', era=era).to_numpy(),
                                                    results=self.predictions.loc[
                                                        self.predictions.era == era, 'ensemble'].to_numpy(),
@@ -121,8 +123,11 @@ class ModelTester():
 
         self.config.logger.info("TESTING " + name.upper() + "")
 
-        results = self.model_factory.estimate_model(model_name=name, train_data=data, test_data=None,
-                                                           data_type_train='train', data_type_test='test')
+        results = self.model_factory.estimate_model(model_name=name,
+                                                    train_data=data,
+                                                    test_data=None,
+                                                    data_type_train='train',
+                                                    data_type_test='test')
 
         self.predictions[name] = results
 
@@ -138,7 +143,15 @@ class ModelTester():
 
                 ind = data.full_set[data.full_set.data_type == 'test'].era == era
 
-                metrics[era] = ModelMetrics.getMetrics(data.getY(data_type='test', era=era).to_numpy(), results[ind], t1)
+                check = data.getY(data_type='test', era=era).to_numpy().size <= 1
+                check = check and results[ind].size <= 1
+
+                if check:
+                    self.config.logger.info("No data for era: {0}, model: {1}, split: {2}".format(era, name, self.splits_performed))
+                    metrics[era] = ModelMetrics.defaultOutput()
+
+                else:
+                    metrics[era] = ModelMetrics.getMetrics(data.getY(data_type='test', era=era).to_numpy(), results[ind], t1)
 
         log = name.upper() + " METRICS:\t"
         log += "Time taken: {:.2f}".format(all_metrics['duration']) + ", "
@@ -154,7 +167,7 @@ class ModelTester():
 
         # The below code is sometimes used for forcing a model...
         # self.best_model = 'xgboost'
-        # return self.model_factory.models['xgboost']
+        # return self.best_model
 
         self.model_performance = self.model_performance.reset_index()
 
@@ -209,7 +222,7 @@ class ModelTester():
 
 
         metrics_orig = ModelMetrics.getNumeraiScoreByEra(test_data.getY(data_type = 'validation'),
-                                                               output.loc[test_data.full_set.data_type == 'validation'],
+                                                               output[test_data.full_set.data_type == 'validation'],
                                                                test_data.getEras())
 
         output = auto_neutralize_normalize(output, test_data, self.config.n_cores, self.config.logger)
@@ -218,7 +231,7 @@ class ModelTester():
         self.config.logger.info(str(output.describe()))
 
         metrics_normalized = ModelMetrics.getNumeraiScoreByEra(test_data.getY(data_type = 'validation'),
-                                                               output.loc[test_data.full_set.data_type == 'validation'],
+                                                               output[test_data.full_set.data_type == 'validation'],
                                                                test_data.getEras())
 
         self.config.logger.info("Original Numerai Score:")
@@ -328,4 +341,4 @@ class ModelTester():
 
         output = self.weightedAveragePreds(weights, predictions)
 
-        return (output)
+        return output

@@ -1,0 +1,3 @@
+0 22 * * 6 cd /Users/glenmoutrie/Documents/numerai/numerai_scripts && source /Users/glenmoutrie/Documents/numerai/numerai_venv/bin/activate && python check_and_run.py && deactivate
+0 22 * * 4-5 cd /Users/glenmoutrie/Documents/numerai/numerai_scripts && source /Users/glenmoutrie/Documents/numerai/numerai_venv/bin/activate && python dry_run.py && deactivate
+0 15 * * 5 cd /Users/glenmoutrie/Documents/numerai/numerai_scripts && source /Users/glenmoutrie/Documents/numerai/numerai_venv/bin/activate && python dry_run.py && deactivate

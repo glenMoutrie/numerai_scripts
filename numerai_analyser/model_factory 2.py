@@ -2,8 +2,6 @@ from sklearn import linear_model, ensemble, naive_bayes, metrics
 from sklearn.model_selection import RandomizedSearchCV, ShuffleSplit
 from sklearn.base import clone
 
-import pandas as pd
-
 from xgboost import XGBClassifier, XGBRegressor
 from .DNN import DNNVanilla
 
@@ -41,7 +39,7 @@ class ModelFactory:
         self.models['DNN_full'] = DNNVanilla(width=10, depth=1)
 
         self.predict_only = ['xgboostReg', 'DNN']
-        self.use_original_features = ['xgboost_num', 'DNN_full']
+        self.use_all_features = ['xgboost_num', 'DNN_full']
 
     def cross_validate_model_params(self, data, splits=10, n_cores=-1):
 
@@ -80,12 +78,12 @@ class ModelFactory:
 
             results = model.predict(test_data.getX(data_type=data_type_test))
 
-        elif model_name in self.use_original_features:
+        elif model_name in self.use_all_features:
 
-            model.fit(train_data.getX(data_type=data_type_train, original_features=True),
+            model.fit(train_data.getX(data_type=data_type_train, all_features=True),
                       train_data.getY(data_type=data_type_train))
 
-            results = model.predict(test_data.getX(data_type=data_type_test, original_features=True))
+            results = model.predict(test_data.getX(data_type=data_type_test, all_features=True))
 
         else:
 
@@ -95,8 +93,6 @@ class ModelFactory:
             y_prediction = model.predict_proba(test_data.getX(data_type=data_type_test))
 
             results = y_prediction[:, 1]
-
-        # results = pd.DataFrame(results)
 
         return results
 

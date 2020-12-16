@@ -55,7 +55,6 @@ class ModelMetrics():
         return(stop_metrics)
 
 
-
     @classmethod
     def getMetrics(cls,  observed, results, t1):
 
@@ -65,31 +64,25 @@ class ModelMetrics():
 
         binary_results = cls.getBinaryPred(results)
 
+        if stop_metrics:
+            return(output)
+
         output['duration'] = time.time() - t1
+
+        output['log_loss'] = metrics.log_loss(observed.round(), results)
+
+        output['corr'] = np.correlate(observed, results)[0]
 
         output['num_cov'] = cls.numeraiScore(results, observed)
 
-        if not stop_metrics:
+        output['rsq'] = metrics.r2_score(observed, results)
 
-            # The measures below become meaningless if checks fail
-            output['precision'] = metrics.precision_score(observed.round(), binary_results)
+        output['precision'] = metrics.precision_score(observed.round(), binary_results)
 
-            output['recall'] = metrics.recall_score(observed.round(), binary_results)
+        output['recall'] = metrics.recall_score(observed.round(), binary_results)
 
-            output['f1'] = metrics.f1_score(observed.round(), binary_results)
+        output['f1'] = metrics.f1_score(observed.round(), binary_results)
 
-            # The measures below error if checks fail
-            output['log_loss'] = metrics.log_loss(observed.round(), results)
-
-            output['corr'] = np.correlate(observed, results)[0]
-
-            output['auc'] = metrics.roc_auc_score(observed.round(), binary_results)
-
-            output['rsq'] = metrics.r2_score(observed, results)
-
-        else:
-            pass
-            # print(observed)
-            # print(results)
+        output['auc'] = metrics.roc_auc_score(observed.round(), binary_results)
 
         return output

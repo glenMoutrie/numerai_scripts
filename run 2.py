@@ -33,7 +33,7 @@ from numerai_analyser.test_type import TestType
 #              v) apply over era function
 
 if __name__ == "__main__":
-	# predictNumerai(True, TestType.SYNTHETIC_DATA, 2000, splits = 2, email_updates = False)
-	# predictNumerai(True, TestType.SUBSET_DATA, 2000, splits = 3, email_updates = False)
-	predictNumerai(False, splits = 5)
+	# predictNumerai(True, TestType.SYNTHETIC_DATA, 2000, splits = 2)
+	# predictNumerai(True, TestType.SUBSET_DATA, 50, splits = 3)
+	predictNumerai(False, splits = 10)
 

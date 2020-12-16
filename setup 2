@@ -1,0 +1,106 @@
+# Install git
+sudo apt install git
+
+# Get numerai code base
+git clone https://github.com/glenMoutrie/numerai_scripts.git
+cd numerai_scripts
+
+gcloud beta compute --project=numerai-submission instances create instance-7 --zone=us-central1-c --machine-type=n1-standard-16 --subnet=default --network-tier=PREMIUM --maintenance-policy=TERMINATE --service-account=1030315135765-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append --tags=http-server,https-server --image=ubuntu-2004-focal-v20200810 --image-project=ubuntu-os-cloud --boot-disk-size=500GB --boot-disk-type=pd-ssd --boot-disk-device-name=instance-7 --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any
+gcloud beta compute ssh --zone "us-central1-c" "instance-7" --project "numerai-submission"
+
+# Process to set up a debian machine ready to run numerai_analyser
+sudo apt update
+
+# Install python
+sudo apt install software-properties-common -y
+sudo add-apt-repository ppa:deadsnakes/ppa -y
+sudo apt update
+sudo apt install python3.8 python3-venv python3-dev -y
+
+################
+# INSTALLING R #
+################
+## METHOD 1
+# Install R and boom spike slab
+## See https://docs.rstudio.com/resources/install-r/ for details
+#sudo apt-get update
+#sudo apt-get install gdebi-core
+#export R_VERSION=4.0.2
+#
+## Make sure this applies to the correct OS
+#curl -O https://cdn.rstudio.com/r/ubuntu-2004/pkgs/r-${R_VERSION}_1_amd64.deb
+#sudo gdebi r-${R_VERSION}_1_amd64.deb -y
+#/opt/R/${R_VERSION}/bin/R --version
+#sudo ln -s /opt/R/${R_VERSION}/bin/R /usr/local/bin/R
+#sudo ln -s /opt/R/${R_VERSION}/bin/Rscript /usr/local/bin/Rscript
+
+## METHOD 2
+# Installing R from source
+# https://www.digitalocean.com/community/tutorials/how-to-install-r-on-ubuntu-18-04
+#sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
+#sudo add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran40/'
+#sudo apt update
+#sudo apt install r-base
+
+## METHOD 3 -- THE ONE THAT WORKED!!!!!!!
+## This involves installing ALL dependencies requires to install. You need to isntall from source
+# because rpy2 wont be able to access the library with the base R packages when using method 1 (
+sudo apt-get update
+sudo apt-get install gdebi-core
+
+# Install R dependencies
+# Courtesy of https://github.com/Jiefei-Wang/Painless-R-compilation-and-installation-on-Ubuntu
+sudo apt-get install build-essential fort77 xorg-dev liblzma-dev libblas-dev gfortran -y
+sudo apt-get install gcc-multilib gobjc++ aptitude -y
+sudo apt-get install libreadline-dev -y
+sudo apt-get install libbz2-dev -y
+sudo apt-get install libpcre2-dev -y
+sudo apt-get install libcurl4 libcurl4-openssl-dev -y
+sudo apt-get install default-jre -y
+sudo apt-get install default-jdk -y
+sudo apt-get install openjdk-8-jdk openjdk-8-jre -y
+export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+# Optional
+sudo apt-get install texinfo -y
+sudo apt-get install texlive -y
+sudo apt-get install texlive-fonts-extra -y
+
+#sudo apt-get build-dep r-base
+
+mkdir R
+cd R
+wget https://cloud.r-project.org/src/base/R-4/R-4.0.2.tar.gz
+tar xvf R-4.0.2.tar.gz
+mkdir R_HOME
+mkdir R_BIN
+cd R-4.0.2/
+./configure --enable-R-shlib --prefix=$HOME/R/R-4.0.2 --libdir=$HOME/R/R-4.0.2 #--rincludedir=$HOME/R/R-4.0.2
+make
+make check-all
+make install prefix=$HOME/R/R_BIN rhome=$HOME/R/R_HOME
+cd ../
+sudo chmod -R a+rwx R-4.0.2
+sudo ln -s /home/glenmoutrie/R/R-4.0.2/bin/R /usr/local/bin/R
+sudo ln -s /home/glenmoutrie/R/R-4.0.2/bin/Rscript /usr/local/bin/Rscript
+export R_LIBS="/home/glenmoutrie/R/R-4.0.2/lib"
+export R_HOME="/home/glenmoutrie/R/R-4.0.2"
+export LD_LIBRARY_PATH="/home/glenmoutrie/R/R-4.0.2/lib"
+sudo ln -s /opt/R/${R_VERSION}/bin/R /usr/local/bin/R
+
+## METHOD 4
+# Following https://cloud.r-project.org/
+#sudo add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/'
+#sudo apt-get update
+#sudo apt-get install r-base
+#sudo apt-get install r-base-dev
+
+sudo R --slave -e 'install.packages("BoomSpikeSlab", repos="http://cran.us.r-project.org")'
+sudo R --slave -e 'install.packages("data.table", repos="http://cran.us.r-project.org")'
+
+python3.8 -m venv numerai_venv
+source numerai_venv/bin/activate
+pip install .
+
+export PATH=/usr/local/bin/R:${PATH}
+export LD_LIBRARY_PATH=/opt/R/4.0.2/lib:${LD_LIBRARY_PATH}
+export PKG_CONFIG_PATH=/opt/R/4.0.2/lib/pkgconfig/:${PKG_CONFIG_PATH}
