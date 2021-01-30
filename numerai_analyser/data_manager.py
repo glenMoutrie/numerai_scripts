@@ -116,9 +116,9 @@ class NumeraiDataManager():
 
 
 
-    def uploadResults(self, results, name):
+    def uploadResults(self, results, name, model):
 
-        file_name = self.download_loc / self.sub_folder / (self.config.time_file_safe + "_" + self.pred_file)
+        file_name = self.download_loc / self.sub_folder / ("_".join([self.config.time_file_safe, model, self.pred_file]))
 
         self.config.logger.info("Writing results to " + str(file_name))
 
@@ -132,8 +132,9 @@ class NumeraiDataManager():
         self.config.logger.info("Uploading results to Numerai")
 
         comp_num = self.api_conn.tournament_name2number(name)
+        model_id = self.api_conn.get_models()[model]
 
-        res = self.api_conn.upload_predictions(file_name, tournament=comp_num)
+        res = self.api_conn.upload_predictions(file_name, tournament=comp_num, model_id = model_id)
         self.config.logger.info(res)
 
     def getSubmissionStatus(self):
@@ -225,7 +226,7 @@ def subsetDataForTesting(data, era_len = 100):
 
     era_len -= 1
 
-    return(pd.concat([data.loc[data.era == era][0:era_len] for era in data.era.unique()]))
+    return(pd.concat([data.loc[data.era == era][0:era_len] for era in data.era.unique()]).reset_index())
 
 
 def get_latest_downloaded_comp(dataset_dir):

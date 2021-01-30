@@ -8,7 +8,7 @@ class DNNVanilla(BaseEstimator):
 
     lock = threading.Lock()
 
-    def __init__(self, width, depth, activation = 'relu', metrics = ['accuracy']):
+    def __init__(self, width=10, depth=10, activation = 'relu', metrics = ['accuracy']):
 
         self.width = width
         self.depth = depth

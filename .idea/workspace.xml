@@ -21,11 +21,26 @@
   <component name="ChangeListManager">
     <list default="true" id="13cf4be8-9dc1-4e27-8032-290e781afa55" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dry_run.py" beforeDir="false" afterPath="$PROJECT_DIR$/dry_run.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/DNN 2.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/DNN.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/DNN.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/__init__ 2.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/analyser 2.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/analyser.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/analyser.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/auto_cluster 2.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/config 2.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/data_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/data_manager.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/email_manager 2.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/feature_selection 2.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/numerai_analyser/model_cv.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/model_cv.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/model_factory 2.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/numerai_analyser/model_factory.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/model_factory.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/numerai_analyser/model_metrics.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/model_metrics.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/model_metrics 2.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/neutralize_normalize 2.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/neutralize_normalize.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/neutralize_normalize.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/synthetic_numerai_data 2.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_analyser/test_type 2.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/run.py" beforeDir="false" afterPath="$PROJECT_DIR$/run.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -212,12 +227,12 @@
       <method v="2" />
     </configuration>
     <list>
+      <item itemvalue="Python.numerai_full_run" />
       <item itemvalue="Python.auto_cluster" />
       <item itemvalue="Python.check_and_run" />
       <item itemvalue="Python.data_manager" />
       <item itemvalue="Python.email_manager" />
       <item itemvalue="Python.numerai_dask_dataset" />
-      <item itemvalue="Python.numerai_full_run" />
     </list>
     <recent_temporary>
       <list>

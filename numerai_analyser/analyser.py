@@ -45,10 +45,16 @@ Now running paramter cross validation.""".format(dl.round_num, comp)
 
             else:
 
-                n_est = 1000 # numerai recomendation is 20000 but takes ~4hrs+ per fit
+                n_est = 2000 # numerai recomendation is 2000 but takes ~4hrs+ per fit
                 cv_splits = 10
 
             mf = ModelFactory(n_est)
+
+            config.logger.info('Estimating costly models')
+
+            mf.estimate_costly_models(train)
+
+            config.logger.info('Performing cross validation')
 
             mf.cross_validate_model_params(train, cv_splits, n_cores = config.n_cores)
 
@@ -64,26 +70,33 @@ Now running model testing over {2} splits.""".format(dl.round_num, comp, splits)
 
             tester.testAllSplits(train)
 
-            results = tester.getBestPrediction(train, test)
-
-            results_col = 'probability_' + comp
-
-            results_df = pd.DataFrame(data={results_col: results})
-            results_df = pd.DataFrame(test.getID()).join(results_df)
+            results = {'gbot': tester.getPrediction(train, test),
+                       'gbot_v2': tester.getPrediction(train, test, 'xgbreg_costly')}
 
             if not test_run:
 
-                dl.uploadResults(results_df, comp)
+                for submission in results.keys():
 
-                try:
-                    dl.getSubmissionStatus()
-                except (ValueError,
-                        OSError,
-                        IOError,
-                        urllib3.exceptions.ProtocolError,
-                        requests.exceptions.ConnectionError) as error:
-                    config.logger.error("Caught error in upload for " + comp)
-                    config.logger.error(error)
+                    config.logger.info('Uploading data for model: {}'.format(submission))
+
+                    results_col = 'probability_' + comp
+
+                    results_df = pd.DataFrame(data={results_col: results[submission]})
+                    results_df = pd.DataFrame(test.getID()).join(results_df)
+
+
+
+                    try:
+                        dl.uploadResults(results_df, comp, submission)
+                        dl.getSubmissionStatus()
+
+                    except (ValueError,
+                            OSError,
+                            IOError,
+                            urllib3.exceptions.ProtocolError,
+                            requests.exceptions.ConnectionError) as error:
+                        config.logger.error("Caught error in upload for " + comp)
+                        config.logger.error(error)
 
             config.logger.info("Complete.")
 

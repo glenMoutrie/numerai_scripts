@@ -53,7 +53,8 @@ def auto_neutralize_normalize(predictions, test, cores=-1, logger=logging.getLog
 
     logger.info('Selecting neutralization proportion')
 
-    neutralized = parallel(delayed(normalizeAndNeutralize)(predictions, test, i / 10) for i in range(11))
+    # neutralized = parallel(delayed(normalizeAndNeutralize)(predictions, test, i / 10) for i in range(11))
+    neutralized = [normalizeAndNeutralize(predictions, test, i / 10) for i in range(11)]
 
     scores = [{**{'proportion': n['proportion']}, \
                **ModelMetrics.getNumeraiScoreByEra(test.getY(), n['neut_pred'], test.getEras())}

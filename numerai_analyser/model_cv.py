@@ -179,7 +179,10 @@ class ModelTester():
 
         self.config.logger.info(str(rank.sort_values()))
 
-        self.best_model = rank.idxmax()
+        self.config.logger.info('Ignoring models that are not cross validated: ' + (', '.join(self.model_factory.saved_model)))
+
+        self.best_model = rank.loc[~rank.index.isin(self.model_factory.saved_model)].idxmax()
+
 
         self.config.logger.info("Best model: " + self.best_model)
 
@@ -208,9 +211,10 @@ class ModelTester():
 
         return cov_mean / cov_sd
 
-    def getBestPrediction(self, train_data, test_data):
+    def getPrediction(self, train_data, test_data, name = None):
 
-        name = self.getBestModel()
+        if name is None:
+            name = self.getBestModel()
 
         if name == 'ensemble':
 
