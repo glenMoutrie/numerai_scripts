@@ -2,11 +2,14 @@
 datasets/*
 api_key
 
+# Other temp files
 .temp/*
 .DS_Store
 *.swp
 dask-worker-space/*
 *.csv
+
+#Space used for ad-hoc work
 analyse_run/*
 
 # Venv
@@ -22,3 +25,6 @@ numerai_analyser/__pycache__
 #logs
 logs/model_perfomance/*
 logs/runtime/*
+
+#saved model outputs
+model_repo/*

@@ -42,12 +42,12 @@ class SyntheticNumeraiData():
 			'data_type': 'train'})
 
 		for f in self.features:
-			train[f] = [random.normalvariate(0,1) for i in range(0,self.observations)]
+			train[f] = [random.choice([0,0.25,0.5,0.75,1]) for i in range(0,self.observations)]
 
 		for c in self.comp:
 			# col_name = 'target_' + c
 			col_name = 'target'
-			train[col_name] = [random.randint(0,1) for i in range(0, self.observations)]
+			train[col_name] = [random.choice([0,0.25,0.5,0.75,1]) for i in range(0, self.observations)]
 
 		self.train = train
 

@@ -2,6 +2,8 @@ import os
 import numerapi as nmapi
 import pandas as pd
 import re
+import urllib3
+import requests
 
 from .synthetic_numerai_data import SyntheticNumeraiData
 from .test_type import TestType
@@ -159,7 +161,7 @@ class NumeraiDataManager():
                 self.train = subsetDataForTesting(self.train, self.config.test_size)
                 self.test = subsetDataForTesting(self.test, self.config.test_size)
 
-    def _getData(self, competition_type, polynomial, reduce_features, estimate_clusters):
+    def _getData(self, competition_type, polynomial, reduce_features, estimate_clusters, use_features):
 
         params = {'config' : self.config,
                   'competition_type' : competition_type,
@@ -167,8 +169,9 @@ class NumeraiDataManager():
                   'estimate_clusters' : estimate_clusters}
 
         train_params = {'data': self.train,
-                        'reduce_features' : reduce_features,
-                        'test': self.config.test_run}
+                        'reduce_features' : False if use_features is not None else reduce_features,
+                        'test': self.config.test_run,
+                        'use_features': use_features}
 
         self.train = TrainSet(**{**params, **train_params})
 
@@ -181,7 +184,7 @@ class NumeraiDataManager():
 
         return self.train, self.test
 
-    def getData(self, competition_type = None, polynomial = False, reduce_features = False, estimate_clusters = False):
+    def getData(self, competition_type = None, polynomial = False, reduce_features = False, estimate_clusters = False, use_features = None):
 
         """
         Gets the numerai train and test data sets, either generating the synthetic test data or
@@ -195,6 +198,8 @@ class NumeraiDataManager():
         :param reduce_features: Boolean indicator stating if you want to reduce the feature space
 
         :param estimate_clusters: Boolean indicator stating if you want to add a clustering feature
+
+        :param use_features: List[str] force which features you want to use overriding reduce_features
 
         :return: A tuple, first is a TrainData object, second is a TestData object
         """
@@ -220,8 +225,31 @@ class NumeraiDataManager():
 
         self.read()
 
-        return self._getData(competition_type, polynomial, reduce_features, estimate_clusters)
-        
+        return self._getData(competition_type, polynomial, reduce_features, estimate_clusters, use_features)
+
+    def submit_results(self, results_dict, comp, test):
+
+        for submission in results_dict.keys():
+
+            self.config.logger.info('Uploading data for model: {}'.format(submission))
+
+            results_col = 'probability_' + comp
+
+            results_df = pd.DataFrame(data={results_col: results_dict[submission]})
+            results_df = pd.DataFrame(test.getID()).join(results_df)
+
+            try:
+                self.uploadResults(results_df, comp, submission)
+                self.getSubmissionStatus()
+
+            except (ValueError,
+                    OSError,
+                    IOError,
+                    urllib3.exceptions.ProtocolError,
+                    requests.exceptions.ConnectionError) as error:
+                self.config.logger.error("Caught error in upload for " + comp)
+                self.config.logger.error(error)
+
 def subsetDataForTesting(data, era_len = 100):
 
     era_len -= 1

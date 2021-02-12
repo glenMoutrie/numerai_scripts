@@ -6,8 +6,6 @@ from sklearn.linear_model import Ridge
 
 import numpy as np
 
-import pandas as pd
-
 from xgboost import XGBClassifier, XGBRegressor
 from .DNN import DNNVanilla
 
@@ -24,6 +22,11 @@ def score(df):
     return correlation(df[PREDICTION_NAME], df[TARGET_NAME])
 
 class ModelFactory:
+
+    predict_only = ['xgboostReg', 'xgboostReg_cv_param', 'DNN']
+    use_original_features = ['xgboost_num', 'DNN_full', 'Ridge']
+    unravel = ['PLSReg']
+    saved_model = ['xgbreg_costly']
 
     def __init__(self, n_est=200):
 
@@ -50,13 +53,8 @@ class ModelFactory:
 
         self.models['adaBoost'] = ensemble.AdaBoostClassifier()
 
-        self.models['DNN'] = DNNVanilla(width=10, depth=10)
-        self.models['DNN_full'] = DNNVanilla(width=10, depth=10)
-
-        self.predict_only = ['xgboostReg', 'DNN']
-        self.use_original_features = ['xgboost_num', 'DNN_full', 'Ridge']
-        self.unravel = ['PLSReg']
-        self.saved_model = ['xgbreg_costly']
+        # self.models['DNN'] = DNNVanilla(width=10, depth=10)
+        # self.models['DNN_full'] = DNNVanilla(width=10, depth=10)
 
     def estimate_costly_models(self, data):
         self.models['xgbreg_costly'] = XGBRegressor(max_depth=5, learning_rate=0.01, n_estimators=2500, n_jobs=-1,
@@ -77,20 +75,21 @@ class ModelFactory:
                       }
         cv = ShuffleSplit(n_splits=splits)
 
-        # dnn_parameters = {'width': [i for i in range(20)],
-        #                   'depth': [i for i in range(20)]}
-        #
-        #
-        #
-        # gscv_dnn = RandomizedSearchCV(DNNVanilla(), param_distributions=dnn_parameters, n_jobs=n_cores,
-        #                               scoring=metrics.make_scorer(metrics.mean_absolute_error),
-        #                               cv=cv, verbose=5, return_train_score=True)
-        #
-        # gscv_dnn.fit(data.getX(),
-        #              data.getY())
-        #
-        # self.models['DNN'] = DNNVanilla(**gscv.best_params_)
-        # self.models['DNN_full'] = DNNVanilla(**gscv.best_params_)
+        dnn_parameters = {'width': [i for i in range(20)],
+                          'depth': [i for i in range(20)],
+                          'epochs': [i for i in range(10)]}
+
+
+
+        gscv_dnn = RandomizedSearchCV(DNNVanilla(), param_distributions=dnn_parameters, n_jobs=1,
+                                      scoring=metrics.make_scorer(metrics.mean_absolute_error),
+                                      cv=cv, verbose=5, return_train_score=True)
+
+        gscv_dnn.fit(data.getX(),
+                     data.getY())
+
+        self.models['DNN'] = DNNVanilla(**gscv_dnn.best_params_)
+        self.models['DNN_full'] = DNNVanilla(**gscv_dnn.best_params_)
 
         gscv = RandomizedSearchCV(XGBRegressor(), param_distributions=parameters, n_jobs=n_cores,
                                   # scoring=metrics.make_scorer(metrics.mean_absolute_error, greater_is_better = False),
@@ -101,58 +100,67 @@ class ModelFactory:
                  data.getY())
 
         self.models['xgboostReg_cv_param'] = XGBRegressor(**gscv.best_params_)
-        self.predict_only.append('xgboostReg_cv_param')
 
 
-
-    def estimate_model(self, model_name, train_data,
-                       test_data=None, data_type_train=None, data_type_test=None):
+    @classmethod
+    def estimate_model(cls, model, model_name, train_data,
+                       test_data=None, data_type_train=None, data_type_test=None,
+                       return_model = False, predict_only = False):
 
         if test_data is None:
             test_data = train_data
 
-        model = self[model_name]
+        if model_name in cls.predict_only:
 
-        if model_name in self.predict_only:
-
-            model.fit(train_data.getX(data_type=data_type_train),
+            if not predict_only:
+                model.fit(train_data.getX(data_type=data_type_train),
                       train_data.getY(data_type=data_type_train))
 
-            results = model.predict(test_data.getX(data_type=data_type_test))
+            if not return_model:
+                results = model.predict(test_data.getX(data_type=data_type_test))
 
-        elif model_name in self.unravel:
+        elif model_name in cls.unravel:
 
-            model.fit(train_data.getX(data_type=data_type_train, original_features=True),
+            if not predict_only:
+                model.fit(train_data.getX(data_type=data_type_train, original_features=True),
                       train_data.getY(data_type=data_type_train))
 
-            results = model.predict(test_data.getX(data_type=data_type_test, original_features=True))
-            results = results[:,0]
+            if not return_model:
+                results = model.predict(test_data.getX(data_type=data_type_test, original_features=True))
+                results = results[:,0]
 
-        elif model_name in self.use_original_features:
+        elif model_name in cls.use_original_features:
 
-            model.fit(train_data.getX(data_type=data_type_train, original_features=True),
+            if not predict_only:
+                model.fit(train_data.getX(data_type=data_type_train, original_features=True),
                       train_data.getY(data_type=data_type_train))
 
-            results = model.predict(test_data.getX(data_type=data_type_test, original_features=True))
+            if not return_model:
+                results = model.predict(test_data.getX(data_type=data_type_test, original_features=True))
 
-        elif model_name in self.saved_model:
+        elif model_name in cls.saved_model:
 
-            model = self.xgboost_costly
-            results = model.predict(test_data.getX(data_type=data_type_test, original_features=True))
+            if not return_model:
+                results = model.predict(test_data.getX(data_type=data_type_test, original_features=True))
 
         else:
 
-            model.fit(train_data.getX(data_type=data_type_train),
+            if not predict_only:
+                model.fit(train_data.getX(data_type=data_type_train),
                       train_data.getY(data_type=data_type_train).round())
 
-            y_prediction = model.predict_proba(test_data.getX(data_type=data_type_test))
+            if not return_model:
+                y_prediction = model.predict_proba(test_data.getX(data_type=data_type_test))
+                results = y_prediction[:, 1]
 
-            results = y_prediction[:, 1]
+        if return_model:
+            return model
 
-        # results = pd.DataFrame(results)
-
-        return results
+        else:
+            return results
 
     def __getitem__(self, model):
-        return clone(self.models[model])
-
+        if model == 'xgbreg_costly':
+            return self.xgboost_costly
+        else:
+            return clone(self.models[model])

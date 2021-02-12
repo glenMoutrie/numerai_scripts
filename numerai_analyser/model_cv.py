@@ -10,6 +10,9 @@ import time
 from .model_metrics import ModelMetrics
 from .neutralize_normalize import auto_neutralize_normalize
 
+from .trained_model_io import NumeraiTrainedOutput
+from .model_factory import ModelFactory
+
 import traceback
 import warnings
 import sys
@@ -123,7 +126,8 @@ class ModelTester():
 
         self.config.logger.info("TESTING " + name.upper() + "")
 
-        results = self.model_factory.estimate_model(model_name=name,
+        results = ModelFactory.estimate_model(model = self.model_factory[name],
+                                                    model_name=name,
                                                     train_data=data,
                                                     test_data=None,
                                                     data_type_train='train',
@@ -211,42 +215,57 @@ class ModelTester():
 
         return cov_mean / cov_sd
 
-    def getPrediction(self, train_data, test_data, name = None):
-
-        if name is None:
-            name = self.getBestModel()
+    @classmethod
+    def getPrediction(cls, config, train_data, test_data, name, weights, trained_models):
 
         if name == 'ensemble':
 
-            output = self.ensemblePrediction(train_data, test_data)
+            output = cls.ensemblePrediction(config, train_data, test_data, weights, trained_models)
 
         else:
 
-            output = self.model_factory.estimate_model(model_name=name, train_data=train_data, test_data=test_data)
+            output = ModelFactory.estimate_model(model = trained_models[name], model_name=name,
+                                                       train_data=train_data, test_data=test_data)
 
 
         metrics_orig = ModelMetrics.getNumeraiScoreByEra(test_data.getY(data_type = 'validation'),
                                                                output[test_data.full_set.data_type == 'validation'],
                                                                test_data.getEras())
 
-        output = auto_neutralize_normalize(output, test_data, self.config.n_cores, self.config.logger)
+        output = auto_neutralize_normalize(output, test_data, config.n_cores, config.logger)
 
-        self.config.logger.info("Predictions summary statistics:")
-        self.config.logger.info(str(output.describe()))
+        config.logger.info("Predictions summary statistics:")
+        config.logger.info(str(output.describe()))
 
         metrics_normalized = ModelMetrics.getNumeraiScoreByEra(test_data.getY(data_type = 'validation'),
                                                                output[test_data.full_set.data_type == 'validation'],
                                                                test_data.getEras())
 
-        self.config.logger.info("Original Numerai Score:")
-        self.config.logger.info("Validation Correlation: {0}\nValidation Sharpe: {1}" \
+        config.logger.info("Original Numerai Score:")
+        config.logger.info("Validation Correlation: {0}\nValidation Sharpe: {1}" \
                                 .format(metrics_orig['correlation'], metrics_orig['sharpe']))
 
-        self.config.logger.info("Neutralized Numerai Score:")
-        self.config.logger.info("Validation Correlation: {0}\nValidation Sharpe: {1}" \
+        config.logger.info("Neutralized Numerai Score:")
+        config.logger.info("Validation Correlation: {0}\nValidation Sharpe: {1}" \
                                 .format(metrics_normalized['correlation'], metrics_normalized['sharpe']))
 
         return output
+
+
+    def train_all_models(self, train):
+
+        self.trained_models = {}
+
+        for i in (self.model_factory.models.keys()):
+            self.config.logger.info('TRAINING ' + i.upper() + ' ON FULL DATA SET')
+
+            self.trained_models[i] = ModelFactory.estimate_model(model = self.model_factory[i], model_name=i,
+                                                                       train_data=train, return_model = True)
+
+
+    def getTrainedOutput(self, features):
+
+        return NumeraiTrainedOutput(features, self.trained_models, self.getEnsembleWeights(), self.config.run_param, self.config.test_param)
 
     def logMetrics(self):
 
@@ -263,7 +282,8 @@ class ModelTester():
 
     '''
 
-    def weightedAveragePreds(self, weights, predictions):
+    @staticmethod
+    def weightedAveragePreds(weights, predictions):
 
         weights = weights.fillna(0)
 
@@ -314,8 +334,7 @@ class ModelTester():
         rank['split'] = self.splits_performed
         viable['split'] = self.splits_performed
 
-    def ensemblePrediction(self, train, test):
-
+    def getEnsembleWeights(self):
         erax_validity = self.all_valid_checks \
             .astype({'viable': 'int32'}) \
             .groupby('model')['viable'] \
@@ -336,13 +355,21 @@ class ModelTester():
 
         weights = self.all_ranks[list(models)].agg(np.nanmean)
 
+        return weights
+
+    @classmethod
+    def ensemblePrediction(cls, config, train, test, weights = None, trained_models = None):
+
+        models = weights.index.to_list()
+
         predictions = pd.DataFrame(columns=models, index=[i for i in range(test.N)])
 
         for i in models:
-            self.config.logger.info('TRAINING ' + i.upper())
+            config.logger.info('PROVIDING PREDICTIONS FOR ' + i.upper())
 
-            predictions[i] = self.model_factory.estimate_model(model_name=i, train_data=train, test_data=test)
+            predictions[i] = ModelFactory.estimate_model(model = trained_models[i], model_name = i, train_data=train,
+                                                         test_data=test, predict_only= True)
 
-        output = self.weightedAveragePreds(weights, predictions)
+        output = cls.weightedAveragePreds(weights, predictions)
 
         return output

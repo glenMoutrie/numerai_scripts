@@ -8,12 +8,13 @@ class DNNVanilla(BaseEstimator):
 
     lock = threading.Lock()
 
-    def __init__(self, width=10, depth=10, activation = 'relu', metrics = ['accuracy']):
+    def __init__(self, width=10, depth=10, activation = 'relu', metrics = ['accuracy'], epochs = 1):
 
         self.width = width
         self.depth = depth
         self.activation = activation
         self.metrics = metrics
+        self.epochs = epochs
 
         model = keras.Sequential()
 
@@ -30,13 +31,21 @@ class DNNVanilla(BaseEstimator):
 
     def fit(self, X, y):
 
-        self.model.fit(X.values, y.values, use_multiprocessing=False)
+        self.model.fit(X.values, y.values, use_multiprocessing=False, epochs = self.epochs)
 
     def predict(self, X):
 
         output = self.model.predict(X.values).ravel()
 
         return(output)
+
+    def to_json(self):
+
+        return self.model.to_json()
+
+    def from_json(self, json):
+
+        self.model = keras.models.model_from_json(json)
 
 
 

@@ -162,17 +162,22 @@ class TrainSet(DataSet):
 
     """
 
-    def __init__(self, config, data, competition_type, polynomial=True, reduce_features=True, test=False, estimate_clusters = False):
+    def __init__(self, config, data, competition_type, polynomial=True, reduce_features=True, test=False,
+                 estimate_clusters = False, use_features = None):
 
         super(TrainSet, self).__init__(config, data, competition_type, polynomial, estimate_clusters)
 
-        if reduce_features:
+        if reduce_features and use_features is None:
             if test:
                 prob = 0.9
             else:
                 prob = 0.01
 
             self.reduceFeatureSpace(prob)
+
+        elif use_features is not None:
+
+            self.numeric_features = use_features
 
         self.updateFeaturesList()
 

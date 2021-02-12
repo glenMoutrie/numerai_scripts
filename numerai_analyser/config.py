@@ -10,7 +10,7 @@ import psutil
 class NumeraiConfig():
 
     def __init__(self, test_run = True, test_type = TestType.SYNTHETIC_DATA, test_size = 100, save_log_file = False,
-                 key_loc = None, email_updates = True):
+                 key_loc = None, email_updates = True, **kwargs):
 
         self.start_time = datetime.now()
 
@@ -32,6 +32,10 @@ class NumeraiConfig():
 
         self.n_cores = psutil.cpu_count(False)
 
+        additional_params = kwargs
+
+        self.run_param = self.setupRunParams(test_run, **additional_params)
+
         os.environ["OMP_NUM_THREADS"] = str(self.n_cores)
 
         if test_run:
@@ -43,7 +47,30 @@ class NumeraiConfig():
 
             self.test_type = self.test_size = None
 
+        self.test_param = {'test_run': test_run,
+                           'test_type': test_type,
+                           'test_size': test_size}
+
         self.setup()
+
+    def setupRunParams(self, test_run, **kwargs):
+
+        default_params = {
+            'splits' : 2 if test_run else 10,
+            'n_est' : 200 if test_run else 2000,# numerai recomendation is 2000 but takes ~4hrs+ per fit
+            'param_splits' : 2 if test_run else 10,
+            'split_test_size' : 0.25,
+            'polynomial' : True,
+            'reduced_features' : True,
+            'estimate_clusters' : False
+        }
+
+        for i in default_params.keys():
+            if i in kwargs.keys():
+                default_params[i] = kwargs[i]
+
+        return default_params
+
 
     def setupLogger(self):
 
@@ -92,6 +119,8 @@ class NumeraiConfig():
 
             self.numerai_home = Path(os.getcwd())
 
+        test_flag = "test_run_" if self.test_run  else ""
+
         self.key_loc = self.numerai_home / "api_key"
 
         self.download_loc = setupDir(self.numerai_home / "datasets")
@@ -100,9 +129,13 @@ class NumeraiConfig():
 
         self.metric_loc = setupDir(self.numerai_home / "logs" / "model_performance")
 
-        self.metric_loc_file = self.metric_loc / ("metric_log_" + self.time_file_safe + ".csv")
+        self.model_repo = setupDir(self.numerai_home / "model_repo")
 
-        self.log_text_file = self.config_loc / (self.time_file_safe + ".txt")
+        self.metric_loc_file = self.metric_loc / ("metric_log_" + test_flag + self.time_file_safe + ".csv")
+
+        self.model_save_file = self.model_repo / ("model_save_" + test_flag + self.time_file_safe + ".joblib")
+
+        self.log_text_file = self.config_loc / (test_flag + self.time_file_safe + ".txt")
 
 
     def readKey(self, key_loc):
