@@ -20,39 +20,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="13cf4be8-9dc1-4e27-8032-290e781afa55" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dockerfile 2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/README 2.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api_key 2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build_and_test 2.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/check_and_run 2.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cron_tab 2.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dry_run 2.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/dry_run.py" beforeDir="false" afterPath="$PROJECT_DIR$/dry_run.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/email 2" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/trained_model_io.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/numerai_analyser/DNN.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/DNN.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/numerai_analyser/analyser.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/analyser.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/numerai_analyser/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/numerai_analyser/data_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/data_manager.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/numerai_analyser/data_sets.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/data_sets.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/numerai_analyser/model_cv.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/model_cv.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/numerai_analyser/model_factory.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/model_factory.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/numerai_analyser/synthetic_numerai_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_analyser/synthetic_numerai_data.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/numerai_dask_dataset 2.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/output_208" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pipfreeze 2.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/r_scripts/feature_select 2.R" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/run 2.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/run.py" beforeDir="false" afterPath="$PROJECT_DIR$/run.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/setup 2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/setup 2.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_datamanager 2.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_endtoend 2.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_unit 2.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tf_test 2.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/numerai_predict.py" beforeDir="false" afterPath="$PROJECT_DIR$/numerai_predict.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

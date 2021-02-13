@@ -16,6 +16,10 @@ class DNNVanilla(BaseEstimator):
         self.metrics = metrics
         self.epochs = epochs
 
+        self.compile_param = {'optimizer': tf.keras.optimizers.Adam(0.001),
+                              'loss': 'mse',
+                              'metrics' : metrics }
+
         model = keras.Sequential()
 
         for i in range(depth):
@@ -46,6 +50,7 @@ class DNNVanilla(BaseEstimator):
     def from_json(self, json):
 
         self.model = keras.models.model_from_json(json)
+        self.model.compile(**self.compile_param)
 
 
 

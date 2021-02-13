@@ -77,7 +77,7 @@ class ModelFactory:
 
         dnn_parameters = {'width': [i for i in range(20)],
                           'depth': [i for i in range(20)],
-                          'epochs': [i for i in range(10)]}
+                          'epochs': [i for i in range(20)]}
 
 
 
