@@ -7,7 +7,6 @@ requirements = [
 	'xgboost',
 	'numerapi',
 	'dask',
-	'rpy2',
 	'tensorflow',
 	'joblib',
 	'scipy',
