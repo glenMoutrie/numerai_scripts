@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import dask.dataframe as dd
 import random
 
 
@@ -49,7 +50,7 @@ class SyntheticNumeraiData():
 			col_name = 'target'
 			train[col_name] = [random.choice([0,0.25,0.5,0.75,1]) for i in range(0, self.observations)]
 
-		self.train = train
+		self.train = dd.from_pandas(train, npartitions = 5)
 
 	def generateTestData(self):
 
@@ -69,7 +70,7 @@ class SyntheticNumeraiData():
 			col_name = 'target'
 			test[col_name] = [random.choice([0,0.25,0.5,0.75,1]) for i in range(0, test_obs + valid_obs)] + [None for i in range(0, live_obs)]
 
-		self.test = test
+		self.test = dd.from_pandas(test, npartitions = 1)
 
 
 	def getTrainData(self):

@@ -75,9 +75,9 @@ class ModelTester():
     def testAllModels(self, data, models):
 
         self.predictions = pd.DataFrame(columns=['era'] + list(models.keys()) + ['ensemble'],
-                                        index=data.full_set[data.full_set.data_type == 'test'].index)
+                                        index=data.full_set[data.full_set.data_type == 'test'].compute().index)
 
-        self.predictions['era'] = data.full_set[data.full_set.data_type == 'test'].era.to_numpy()
+        self.predictions['era'] = data.full_set[data.full_set.data_type == 'test'].compute().era.to_numpy()
 
         mp_update = self.parallel(delayed(self.testModel)(data, model)
                                   for model in models.keys() if not model.startswith('DNN'))
@@ -145,7 +145,7 @@ class ModelTester():
 
             else:
 
-                ind = data.full_set[data.full_set.data_type == 'test'].era == era
+                ind = data.full_set[data.full_set.data_type == 'test'].era.compute() == era
 
                 check = data.getY(data_type='test', era=era).to_numpy().size <= 1
                 check = check and results[ind].size <= 1
@@ -229,7 +229,7 @@ class ModelTester():
 
 
         metrics_orig = ModelMetrics.getNumeraiScoreByEra(test_data.getY(data_type = 'validation'),
-                                                               output[test_data.full_set.data_type == 'validation'],
+                                                               output[test_data.full_set.data_type.compute() == 'validation'],
                                                                test_data.getEras())
 
         output = auto_neutralize_normalize(output, test_data, config.n_cores, config.logger)
@@ -238,7 +238,7 @@ class ModelTester():
         config.logger.info(str(output.describe()))
 
         metrics_normalized = ModelMetrics.getNumeraiScoreByEra(test_data.getY(data_type = 'validation'),
-                                                               output[test_data.full_set.data_type == 'validation'],
+                                                               output[test_data.full_set.data_type.compute() == 'validation'],
                                                                test_data.getEras())
 
         config.logger.info("Original Numerai Score:")

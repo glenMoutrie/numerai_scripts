@@ -5,6 +5,8 @@ from .feature_selection import FeatureSelection
 from .auto_cluster import ClusterFeature
 from abc import ABC, abstractmethod
 
+import dask.dataframe as dd
+
 
 class DataSet(ABC):
     """
@@ -42,7 +44,7 @@ class DataSet(ABC):
         if polynomial:
             self.generatePolynomialFeatures(2, False, False)
 
-        self.N = data.shape[0]
+        self.N = len(data)
 
         self.full_index = [i for i in range(0, self.N)]
 
@@ -69,17 +71,17 @@ class DataSet(ABC):
         self.features = numeric_features + category_features
 
     def getID(self):
-        return self.full_set["id"]
+        return self.full_set["id"].compute()
 
     def getEraIndex(self, era):
-        return self.full_set.era == era
+        return (self.full_set.era == era).compute()
 
     def getX(self, data_type=None, original_features=False, era=None):
 
         if data_type is None:
-            subset = [True] * self.full_set.shape[0]
+            subset = self.full_set.era.str.startswith('era')
         else:
-            subset = self.full_set["data_type"] == data_type
+            subset = self.full_set.data_type == data_type
 
         if era is not None:
             subset = subset & self.full_set.era == era
@@ -89,26 +91,26 @@ class DataSet(ABC):
         else:
             feature_focus = self.features
 
-        return pd.get_dummies(self.full_set.loc[subset, feature_focus])
+        return pd.get_dummies(self.full_set.loc[subset, feature_focus].compute())
 
     def getY(self, data_type=None, era=None):
 
         if data_type is None:
-            subset = np.ones(self.full_set.shape[0], dtype = 'bool')
+            subset = self.full_set.era.str.startswith('era')
         else:
             subset = self.full_set["data_type"] == data_type
 
         if era is not None:
             subset = subset & (self.full_set.era == era)
 
-        return self.full_set.loc[subset, self.y_col]
+        return self.full_set.loc[subset, self.y_col].compute()
 
     def getEras(self, unique_eras=False):
 
         if unique_eras:
-            return self.eras
+            return self.eras.compute()
         else:
-            return self.full_set.era
+            return self.full_set.era.compute()
 
     # TODO: fix poly for full_set
     def generatePolynomialFeatures(self, poly_degree=2, interaction=False, log=True):
@@ -206,17 +208,21 @@ class TrainSet(DataSet):
         #     ordered = True, categories = self.eras)
 
         # Default value for the split index, this should be updated later externally
-        if not (self.full_set.data_type == 'train').all():
+        if not (self.full_set.data_type.compute() == 'train').all():
             warning_text = 'Not all data_type values have the value "train" in the training set\n'\
-            + ", ".join([i + ": " + str(j) for i, j in full_set.data_type.value_counts().to_dict().items()])
+            + ", ".join([i + ": " + str(j) for i, j in full_set.data_type.compute().value_counts().to_dict().items()])
 
             config.logger.warning(warning_text)
 
     def updateSplit(self, train_ind, test_ind):
 
-        self.full_set.data_type.iloc[test_ind] = 'test'
+        full_set = self.full_set.compute()
 
-        self.full_set.data_type.iloc[train_ind] = 'train'
+        full_set.iloc[test_ind].data_type = 'test'
+
+        full_set.iloc[train_ind].data_type = 'train'
+
+        self.full_set == dd.from_pandas(full_set, npartitions = self.full_set.npartitions)
 
 
 class TestSet(DataSet):
