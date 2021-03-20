@@ -10,7 +10,7 @@ import psutil
 class NumeraiConfig():
 
     def __init__(self, test_run = True, test_type = TestType.SYNTHETIC_DATA, test_size = 100, save_log_file = False,
-                 key_loc = None, email_updates = True, **kwargs):
+                 numerai_home = None, email_updates = True, **kwargs):
 
         self.start_time = datetime.now()
 
@@ -22,7 +22,7 @@ class NumeraiConfig():
 
         self.save_log_file = save_log_file
 
-        self.key_loc = key_loc
+        self.numerai_home = numerai_home
 
         self.email_updates = email_updates
 
@@ -111,9 +111,9 @@ class NumeraiConfig():
 
     def setupDirectories(self):
 
-        if self.key_loc is not None:
+        if self.numerai_home is not None:
 
-            self.key_loc = Path(self.key_loc)
+            self.numerai_home = Path(self.numerai_home)
 
         else:
 
@@ -130,6 +130,8 @@ class NumeraiConfig():
         self.metric_loc = setupDir(self.numerai_home / "logs" / "model_performance")
 
         self.model_repo = setupDir(self.numerai_home / "model_repo")
+
+        self.temp_loc = setupDir(self.numerai_home / '.temp')
 
         self.metric_loc_file = self.metric_loc / ("metric_log_" + test_flag + self.time_file_safe + ".csv")
 

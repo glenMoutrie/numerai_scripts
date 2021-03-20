@@ -25,7 +25,7 @@ class ModelFactory:
 
     predict_only = ['xgboostReg', 'xgboostReg_cv_param', 'DNN']
     use_original_features = ['xgboost_num', 'DNN_full', 'Ridge']
-    unravel = ['PLSReg']
+    unravel = ['PLSReg', 'PLSReg_cv']
     saved_model = ['xgbreg_costly']
 
     def __init__(self, n_est=200):
@@ -48,6 +48,8 @@ class ModelFactory:
 
         self.models['xgboost_num'] = XGBRegressor(max_depth=5, learning_rate=0.01, n_estimators=self.n_est, n_jobs=-1,
                                                   colsample_bytree=0.1)
+        # self.models['xgboost_classifier'] = XGBClassifier(max_depth=5, learning_rate=0.01, n_estimators=self.n_est, n_jobs=-1,
+        #                                           colsample_bytree=0.1, use_label_encoder=False)
         self.models['xgboostReg'] = XGBRegressor(max_depth=5, learning_rate=0.01, n_estimators=self.n_est,
                                                  n_jobs=-1)  # , early_stopping_rounds = 5)
 
@@ -78,6 +80,18 @@ class ModelFactory:
         dnn_parameters = {'width': [i for i in range(20)],
                           'depth': [i for i in range(20)],
                           'epochs': [i for i in range(20)]}
+
+
+        pls_parameters = {'n_components': stats.randint(1, np.min(data.getX(original_features=True).shape))}
+
+        gscv_pls = RandomizedSearchCV(PLSRegression(), param_distributions=pls_parameters, n_jobs=n_cores,
+                                      scoring=metrics.make_scorer(metrics.mean_absolute_error),
+                                      cv=cv, verbose=5, return_train_score=True)
+
+        gscv_pls.fit(data.getX( original_features=True),
+                     data.getY())
+
+        self.models['PLSReg_cv'] = PLSRegression(**gscv_pls.best_params_)
 
 
 

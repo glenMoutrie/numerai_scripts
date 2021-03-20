@@ -52,7 +52,7 @@ class DataSet(ABC):
         self.config.logger.info(", ".join(self.numeric_features))
 
         # If True then this will re-run for every competition
-        self.feature_selector = FeatureSelection(self.full_set, self.numeric_features, self.y_col)
+        self.feature_selector = FeatureSelection(self.config, self.full_set, self.numeric_features, self.y_col)
         self.numeric_features = self.feature_selector.selectBestFeatures(min_include)
 
         self.config.logger.info("New feature space:")

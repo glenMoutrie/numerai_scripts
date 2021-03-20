@@ -70,7 +70,10 @@ Now running model testing over {2} splits.""".format(dl.round_num, comp, config.
             results = {'gbot': tester.getPrediction(config, train, test,  tester.getBestModel(), tester.getEnsembleWeights(), tester.trained_models),
                        'gbot_v2': tester.getPrediction(config, train, test, 'xgbreg_costly',  tester.getEnsembleWeights(), tester.trained_models),
                        'gbot_v3': tester.getPrediction(config, train, test, 'DNN_full',  tester.getEnsembleWeights(), tester.trained_models),
-                       'gbot_v4': tester.getPrediction(config, train, test, 'PLSReg',  tester.getEnsembleWeights(), tester.trained_models)}
+                       'gbot_v4': tester.getPrediction(config, train, test, 'PLSReg',  tester.getEnsembleWeights(), tester.trained_models),
+                       'gbot_v5': tester.getPrediction(config, train, test, 'PLSReg_cv',  tester.getEnsembleWeights(), tester.trained_models),
+                       'gbot_v6': tester.getPrediction(config, train, test, 'randomForest',  tester.getEnsembleWeights(), tester.trained_models),
+                       'gbot_v7': tester.getPrediction(config, train, test, 'Ridge',  tester.getEnsembleWeights(), tester.trained_models)}
 
             if not test_run:
 

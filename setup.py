@@ -3,7 +3,7 @@ from setuptools import setup
 requirements = [
 	'sklearn',
 	'pandas',
-	'numpy',
+	'numpy<=1.19.2',
 	'xgboost',
 	'numerapi',
 	'dask',

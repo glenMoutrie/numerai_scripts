@@ -1,3 +1,13 @@
-0 22 * * 6 cd /Users/glenmoutrie/Documents/numerai/numerai_scripts && source /Users/glenmoutrie/Documents/numerai/numerai_venv/bin/activate && python check_and_run.py && deactivate
-0 22 * * 4-5 cd /Users/glenmoutrie/Documents/numerai/numerai_scripts && source /Users/glenmoutrie/Documents/numerai/numerai_venv/bin/activate && python dry_run.py && deactivate
-0 15 * * 5 cd /Users/glenmoutrie/Documents/numerai/numerai_scripts && source /Users/glenmoutrie/Documents/numerai/numerai_venv/bin/activate && python dry_run.py && deactivate
+#0 22 * * 6 cd /Users/glenmoutrie/Documents/numerai/numerai_scripts && source /Users/glenmoutrie/Documents/numerai/numerai_venv/bin/activate && python check_and_run.py && deactivate
+#0 22 * * 7 cd /Users/glenmoutrie/Documents/numerai/numerai_scripts && source /Users/glenmoutrie/Documents/numerai/numerai_venv/bin/activate && python run.py && deactivate
+#0 22 * * 1-5 cd /Users/glenmoutrie/Documents/numerai/numerai_scripts && source /Users/glenmoutrie/Documents/numerai/numerai_venv/bin/activate && python dry_run.py && deactivate
+#49 16 * * 5 cd /Users/glenmoutrie/Documents/numerai/numerai_scripts && source /Users/glenmoutrie/Documents/numerai/numerai_venv/bin/activate && python dry_run.py && deactivate
+
+# Version for predict only
+0 22 * * 6 cd /Users/glenmoutrie/Documents/numerai/numerai_scripts && source /Users/glenmoutrie/Documents/numerai/numerai_venv/bin/activate && python numerai_predict.py final_run && deactivate
+0 22 * * 1-5 cd /Users/glenmoutrie/Documents/numerai/numerai_scripts && source /Users/glenmoutrie/Documents/numerai/numerai_venv/bin/activate && python numerai_predict.py test_run && deactivate
+0 15 * * 5-6 cd /Users/glenmoutrie/Documents/numerai/numerai_scripts && source /Users/glenmoutrie/Documents/numerai/numerai_venv/bin/activate && python numerai_predict.py test_run && deactivate
+
+
+- ethernet - glenmoutrie@192.168.8.124
+- wifi - glenmoutrie@192.168.8.109

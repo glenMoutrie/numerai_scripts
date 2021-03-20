@@ -5,11 +5,11 @@ from itertools import compress
 
 class FeatureSelection:
 
-    def __init__(self, data, features, target, use_previous=False):
+    def __init__(self, config, data, features, target, use_previous=False):
 
-        self.wd = os.getcwd()
-        self.file_location = self.wd + "/.temp/num_data.csv"
-        self.output_location = self.wd + "/.temp/output"
+        self.script_loc = config.numerai_home / "r_scripts/feature_select.R"
+        self.file_location = config.temp_loc / "num_data.csv"
+        self.output_location = config.temp_loc / "output"
 
         self.original_features = features
 
@@ -22,10 +22,10 @@ class FeatureSelection:
 
     def executeBayesianFeatureSelectionR(self):
 
-        command = "Rscript r_scripts/feature_select.R"
-        command += " " + self.file_location + " "
-        command += " " + self.formula + " "
-        command += " " + self.output_location
+        command = "Rscript {0} {1} {2} {3}".format(self.script_loc,
+                                                   self.file_location,
+                                                   self.formula,
+                                                   self.output_location)
 
         os.system(command)
 

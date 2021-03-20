@@ -8,7 +8,7 @@ class DNNVanilla(BaseEstimator):
 
     lock = threading.Lock()
 
-    def __init__(self, width=10, depth=10, activation = 'relu', metrics = ['accuracy'], epochs = 1):
+    def __init__(self, width=10, depth=10, activation = 'relu', metrics = ['mae'], epochs = 1):
 
         self.width = width
         self.depth = depth
@@ -33,9 +33,10 @@ class DNNVanilla(BaseEstimator):
 
         self.model = model
 
+    # @tf.function(experimental_relax_shapes=True)
     def fit(self, X, y):
-
         self.model.fit(X.values, y.values, use_multiprocessing=False, epochs = self.epochs)
+
 
     def predict(self, X):
 

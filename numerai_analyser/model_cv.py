@@ -355,6 +355,9 @@ class ModelTester():
 
         weights = self.all_ranks[list(models)].agg(np.nanmean)
 
+        if weights.idxmax() == 'xgbreg_costly':
+            weights['xgbreg_costly'] = weights.drop('xgbreg_costly').max()
+
         return weights
 
     @classmethod
