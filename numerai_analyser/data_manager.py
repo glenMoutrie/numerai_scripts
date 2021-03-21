@@ -154,8 +154,8 @@ class NumeraiDataManager():
 
         else:
 
-            self.train = dd.read_csv(self.download_loc / self.sub_folder / self.training_data_file, header = 0)
-            self.test = dd.read_csv(self.download_loc / self.sub_folder / self.test_data_file, header = 0)
+            self.train = pd.read_csv(self.download_loc / self.sub_folder / self.training_data_file, header = 0)
+            self.test = pd.read_csv(self.download_loc / self.sub_folder / self.test_data_file, header = 0)
 
             if self.config.test_run and self.config.test_type is TestType.SUBSET_DATA:
 
