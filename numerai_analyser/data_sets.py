@@ -54,7 +54,7 @@ class DataSet(ABC):
         self.config.logger.info(", ".join(self.numeric_features))
 
         # If True then this will re-run for every competition
-        self.feature_selector = FeatureSelection(self.config, self.full_set, self.numeric_features, self.y_col)
+        self.feature_selector = FeatureSelection(self.config, self.full_set.compute(), self.numeric_features, self.y_col)
         self.numeric_features = self.feature_selector.selectBestFeatures(min_include)
 
         self.config.logger.info("New feature space:")
@@ -216,13 +216,16 @@ class TrainSet(DataSet):
 
     def updateSplit(self, train_ind, test_ind):
 
-        full_set = self.full_set.compute()
+        dt_update = self.full_set['data_type'].compute()
 
-        full_set.iloc[test_ind].data_type = 'test'
+        dt_update.loc[test_ind] = 'test'
 
-        full_set.iloc[train_ind].data_type = 'train'
+        dt_update.loc[train_ind] = 'train'
 
-        self.full_set == dd.from_pandas(full_set, npartitions = self.full_set.npartitions)
+        print(dt_update)
+
+        self.full_set['data_type'] = dt_update
+
 
 
 class TestSet(DataSet):

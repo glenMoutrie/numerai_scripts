@@ -36,14 +36,12 @@ def _normalize_and_neutralize(df, columns, by, proportion=1.0):
     return df[columns]
 
 
-def normalizeAndNeutralize(predictions, test, proportion=1.0):
-    X = test.getX(data_type=None, original_features=True)
-
+def normalizeAndNeutralize(predictions, X, original_features, proportion=1.0):
+    print('Neutralization prop: ' + str(proportion))
+    
     output = X \
-        .assign(PREDS=predictions,
-                ERA=test.full_set.era) \
         .groupby('ERA') \
-        .apply(lambda x: _normalize_and_neutralize(x, ["PREDS"], test.original_features, proportion))['PREDS']
+        .apply(lambda x: _normalize_and_neutralize(x, ["PREDS"], original_features, proportion))['PREDS']
 
     return {'proportion': proportion, 'neut_pred': output}
 
@@ -53,8 +51,13 @@ def auto_neutralize_normalize(predictions, test, cores=-1, logger=logging.getLog
 
     logger.info('Selecting neutralization proportion')
 
+    X = test.getX(data_type=None, original_features=True)
+
+    X = X.assign(PREDS=predictions,
+                ERA=test.getEras())
+
     # neutralized = parallel(delayed(normalizeAndNeutralize)(predictions, test, i / 10) for i in range(11))
-    neutralized = [normalizeAndNeutralize(predictions, test, i / 10) for i in range(11)]
+    neutralized = [normalizeAndNeutralize(predictions, X, test.original_features, i / 10) for i in range(11)]
 
     scores = [{**{'proportion': n['proportion']}, \
                **ModelMetrics.getNumeraiScoreByEra(test.getY(), n['neut_pred'], test.getEras())}

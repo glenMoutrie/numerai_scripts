@@ -227,19 +227,21 @@ class ModelTester():
             output = ModelFactory.estimate_model(model = trained_models[name], model_name=name,
                                                        train_data=train_data, test_data=test_data)
 
+        data_type = test_data.full_set.data_type.compute().values
 
-        metrics_orig = ModelMetrics.getNumeraiScoreByEra(test_data.getY(data_type = 'validation'),
-                                                               output[test_data.full_set.data_type.compute() == 'validation'],
-                                                               test_data.getEras())
+
+        metrics_orig = ModelMetrics.getNumeraiScoreByEra(test_data.getY(data_type = 'validation').values,
+                                                               output[data_type == 'validation'],
+                                                               test_data.full_set[test_data.full_set.data_type == 'validation'].era.compute().values)
 
         output = auto_neutralize_normalize(output, test_data, config.n_cores, config.logger)
 
         config.logger.info("Predictions summary statistics:")
         config.logger.info(str(output.describe()))
 
-        metrics_normalized = ModelMetrics.getNumeraiScoreByEra(test_data.getY(data_type = 'validation'),
-                                                               output[test_data.full_set.data_type.compute() == 'validation'],
-                                                               test_data.getEras())
+        metrics_normalized = ModelMetrics.getNumeraiScoreByEra(test_data.getY(data_type = 'validation').values,
+                                                               output[data_type == 'validation'],
+                                                               test_data.full_set[test_data.full_set.data_type == 'validation'].era.compute().values)
 
         config.logger.info("Original Numerai Score:")
         config.logger.info("Validation Correlation: {0}\nValidation Sharpe: {1}" \
