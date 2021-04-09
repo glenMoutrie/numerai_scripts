@@ -19,7 +19,7 @@ pyvenv.cfg
 include/*
 numerai_venv/*
 
-__pycache__
+*/__pycache__
 numerai_analyser/__pycache__
 
 #logs
