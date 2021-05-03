@@ -6,9 +6,10 @@ import umap
 from apricot import FacilityLocationSelection
 
 import joblib
-from dask.distributed import Client, progress
+# from dask.distributed import Client, progress
 
-client = Client(processes = False, threads_per_worker = 16, n_workers = 1)
+# client = Client(processes = False, threads_per_worker = 16, n_workers = 1)
+
 # import multiprocessing as mp
 
 # 1) Reduce dimensions - maybe add this later seems a little overkill

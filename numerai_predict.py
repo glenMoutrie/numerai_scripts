@@ -59,7 +59,7 @@ email_title += " (Test Run)" if test_run else ""
 
 config.send_email(body=email_body,html=email_html, attachment=None, header=email_title)
 
-pred_models = [('gbot', 'ensemble'), ('gbot_v2', 'xgbreg_costly'),('gbot_v3', 'DNN_full'),('gbot_v4', 'PLSReg'),('gbot_v5', 'PLSReg_cv'), ('gbot_v6', 'randomForest'), ('gbot_v7', 'Ridge')]
+pred_models =[('gbot', 'PLSReg'), ('gbot_v2', 'xgbreg_costly'),('gbot_v3', 'DNN_full'),('gbot_v4', 'PLSReg'),('gbot_v5', 'PLSReg_cv'), ('gbot_v6', 'randomForest'), ('gbot_v7', 'Ridge'), ('gbot_8', 'ensemble')]
 
 results = {i: ModelTester.getPrediction(config, train, test,  j, trained_models.ensemble_weights, trained_models.trained_models) for i, j in pred_models}
 # results = {'gbot': ModelTester.getPrediction(config, train, test,  'ensemble', trained_models.ensemble_weights, trained_models.trained_models),
